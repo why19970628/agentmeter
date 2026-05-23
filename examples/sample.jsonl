@@ -1,0 +1,6 @@
+{"tool":"codex","model":"gpt-5","session_id":"s1","project":"/workspace/service","usage":{"input_tokens":28412,"output_tokens":6210,"cache_read_input_tokens":8100,"cache_creation_input_tokens":1600,"reasoning_tokens":920},"timestamp":"2026-05-01T10:00:00Z"}
+{"tool":"codex","model":"gpt-5","session_id":"s2","project":"/workspace/service","usage":{"input_tokens":41200,"output_tokens":9300},"timestamp":"2026-05-02T10:30:00Z"}
+{"tool":"claude-code","model":"claude-sonnet-4","session_id":"s3","project":"/workspace/agentmeter","usage":{"input_tokens":68200,"output_tokens":18400,"cache_read_input_tokens":23100,"cache_creation_input_tokens":4200},"timestamp":"2026-05-02T15:30:00Z"}
+{"tool":"gemini","model":"gemini-2.5-pro","session_id":"s4","project":"/workspace/docs","input_tokens":22400,"output_tokens":7600,"cached_content_token_count":5200,"thoughts_token_count":1100,"occurred_at":"2026-05-03T09:30:00Z"}
+{"tool":"cursor","model":"claude-sonnet-4","session_id":"s5","project":"/workspace/frontend","input_tokens":52800,"output_tokens":10800,"occurred_at":"2026-05-04T11:30:00Z"}
+{"tool":"codex","model":"gpt-5","session_id":"s6","project":"/workspace/agentmeter","input_tokens":73000,"output_tokens":16600,"reasoning_tokens":2500,"tool_tokens":900,"occurred_at":"2026-05-07T13:30:00Z"}

@@ -1,0 +1,132 @@
+{{ define "content" }}
+<main class="page">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">AgentMeter</p>
+      <h1>本地 Agent 用量统计</h1>
+      <p class="subtitle">Offline-first token usage monitor</p>
+    </div>
+    <div class="actions">
+      <span class="status-pill">LOCAL ONLY</span>
+      <select id="grainSelect" aria-label="统计粒度">
+        <option value="day" {{ if eq .Grain "day" }}selected{{ end }}>按天</option>
+        <option value="week" {{ if eq .Grain "week" }}selected{{ end }}>按星期</option>
+        <option value="month" {{ if eq .Grain "month" }}selected{{ end }}>按月</option>
+      </select>
+      <a class="export" href="/export.csv">导出</a>
+    </div>
+  </header>
+
+  <section class="stats">
+    <article>
+      <span>总 Tokens</span>
+      <strong title="{{ format .Dashboard.Summary.TotalTokens }}">{{ compact .Dashboard.Summary.TotalTokens }}</strong>
+    </article>
+    <article>
+      <span>输入 Tokens</span>
+      <strong title="{{ format .Dashboard.Summary.InputTokens }}">{{ compact .Dashboard.Summary.InputTokens }}</strong>
+    </article>
+    <article>
+      <span>输出 Tokens</span>
+      <strong title="{{ format .Dashboard.Summary.OutputTokens }}">{{ compact .Dashboard.Summary.OutputTokens }}</strong>
+    </article>
+    <article>
+      <span>缓存读取</span>
+      <strong title="{{ format .Dashboard.Summary.CacheReadTokens }}">{{ compact .Dashboard.Summary.CacheReadTokens }}</strong>
+    </article>
+    <article>
+      <span>缓存写入</span>
+      <strong title="{{ format .Dashboard.Summary.CacheWriteTokens }}">{{ compact .Dashboard.Summary.CacheWriteTokens }}</strong>
+    </article>
+    <article>
+      <span>推理 Tokens</span>
+      <strong title="{{ format .Dashboard.Summary.ReasoningTokens }}">{{ compact .Dashboard.Summary.ReasoningTokens }}</strong>
+    </article>
+    <article>
+      <span>请求次数</span>
+      <strong title="{{ format .Dashboard.Summary.RequestCount }}">{{ compact .Dashboard.Summary.RequestCount }}</strong>
+    </article>
+    <article>
+      <span>模型数</span>
+      <strong>{{ .Dashboard.Summary.ModelCount }}</strong>
+    </article>
+  </section>
+
+  <section class="chart-panel">
+    <div class="panel-title">
+      <h2>Token 用量趋势</h2>
+      <span>单位：tokens · 生成时间 {{ .GeneratedAt }}</span>
+    </div>
+    <div id="trendChart" class="bar-chart" data-values='{{ json .Dashboard.Trend }}'></div>
+  </section>
+
+  <section class="chart-panel">
+    <div class="panel-title">
+      <h2>每日 API 请求次数</h2>
+      <span>按自然日统计</span>
+    </div>
+    <div id="requestChart" class="line-chart" data-values='{{ json .DailyRequests }}'></div>
+  </section>
+
+  <section class="grid">
+    <article class="panel">
+      <div class="panel-title">
+        <h2>工具排行</h2>
+      </div>
+      <div class="ranking" data-ranking='{{ json .Dashboard.ToolRanking }}'></div>
+    </article>
+    <article class="panel">
+      <div class="panel-title">
+        <h2>项目路径排行</h2>
+      </div>
+      <div class="ranking" data-ranking='{{ json .Dashboard.ProjectRanking }}'></div>
+    </article>
+    <article class="panel wide">
+      <div class="panel-title">
+        <h2>模型用量明细</h2>
+        <span>按每日 + 模型聚合</span>
+      </div>
+      <div class="usage-table-wrap">
+        <table class="usage-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Tool</th>
+              <th>Model</th>
+              <th>Input Tokens</th>
+              <th>Output Tokens</th>
+              <th>Cache Read</th>
+              <th>Cache Write</th>
+              <th>Reasoning</th>
+              <th>Tool Tokens</th>
+              <th>Total Tokens</th>
+              <th>Est. USD</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range .ModelRows }}
+            <tr {{ if eq .Name "Total" }}class="total-row"{{ end }}>
+              <td>{{ .Period }}</td>
+              <td>{{ .Tool }}</td>
+              <td>{{ .Name }}</td>
+              <td>{{ format .InputTokens }}</td>
+              <td>{{ format .OutputTokens }}</td>
+              <td>{{ format .CacheReadTokens }}</td>
+              <td>{{ format .CacheWriteTokens }}</td>
+              <td>{{ format .ReasoningTokens }}</td>
+              <td>{{ format .ToolTokens }}</td>
+              <td>{{ format .TotalTokens }}</td>
+              <td>${{ printf "%.3f" .EstUSD }}</td>
+            </tr>
+            {{ else }}
+            <tr>
+              <td colspan="11" class="empty-cell">暂无模型用量数据</td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+</main>
+{{ end }}
