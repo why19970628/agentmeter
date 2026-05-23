@@ -1,0 +1,64 @@
+name: Bug report zh-CN
+description: 报告解析、token 统计、CLI 输出或 Web dashboard 问题
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。分享日志或 fixture 前，请移除 API Key、prompt、私有路径、账号标识和个人数据。
+  - type: dropdown
+    id: area
+    attributes:
+      label: 影响范围
+      options:
+        - 日志解析
+        - CLI summary
+        - Web dashboard
+        - Release assets
+        - 文档
+        - 不确定
+    validations:
+      required: true
+  - type: dropdown
+    id: tool
+    attributes:
+      label: 受影响工具
+      options:
+        - Codex
+        - Claude Code
+        - Cursor
+        - Gemini CLI
+        - 多个工具
+        - 不确定
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: AgentMeter 版本或 commit
+      placeholder: v0.1.1 或 commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: 脱敏 fixture 或示例记录
+      description: 请使用小型合成示例，移除 API Key、prompt、私有路径和个人数据。
+      render: json
+  - type: textarea
+    id: validation
+    attributes:
+      label: 已尝试的验证
+      placeholder: go test ./..., agentmeter summary -paths examples 等

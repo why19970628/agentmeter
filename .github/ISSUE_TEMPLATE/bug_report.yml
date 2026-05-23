@@ -1,0 +1,64 @@
+name: Bug report
+description: Report incorrect parsing, token accounting, CLI output, or Web dashboard behavior
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please remove API keys, prompts, private paths, account identifiers, and personal data before sharing logs or fixtures.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Log parsing
+        - CLI summary
+        - Web dashboard
+        - Release assets
+        - Documentation
+        - Unknown
+    validations:
+      required: true
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Affected tool
+      options:
+        - Codex
+        - Claude Code
+        - Cursor
+        - Gemini CLI
+        - Multiple tools
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: AgentMeter version or commit
+      placeholder: v0.1.1 or commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Sanitized fixture or example record
+      description: Use a tiny synthetic example. Remove API keys, prompts, private paths, and personal data.
+      render: json
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation attempted
+      placeholder: go test ./..., agentmeter summary -paths examples, etc.
