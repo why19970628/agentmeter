@@ -221,6 +221,23 @@ go test ./...
 go run . serve -paths examples
 ```
 
+## 发布
+
+推送 `v*` tag 后，GitHub Actions 会通过 GoReleaser 构建 GitHub Release。Release assets 会包含 macOS、Linux、Windows 压缩包和 `checksums.txt`。
+
+创建 release：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+本地构建 release snapshot：
+
+```bash
+make release-snapshot
+```
+
 ## 项目状态
 
 AgentMeter 目前是一个早期本地工具。当前重点是可靠解析本地日志、提供清晰的用量摘要和轻量 Web 仪表盘。后续可以继续增强数据源诊断、自定义价格、会话视图和 provider 归属等能力。

@@ -221,6 +221,23 @@ Run with sample data:
 go run . serve -paths examples
 ```
 
+## Releases
+
+GitHub releases are built with GoReleaser when a `v*` tag is pushed. Release assets include macOS, Linux, and Windows archives plus `checksums.txt`.
+
+Create a release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Build a local release snapshot:
+
+```bash
+make release-snapshot
+```
+
 ## Status
 
 AgentMeter is an early local tool. The current focus is reliable local parsing, clear usage summaries, and a lightweight dashboard. Future improvements may include data-source diagnostics, custom pricing overrides, session/thread views, and richer provider attribution.
