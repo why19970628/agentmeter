@@ -1,19 +1,19 @@
 :root {
-  --bg: #070b10;
-  --panel: rgba(13, 20, 28, 0.82);
-  --panel-strong: rgba(16, 25, 35, 0.94);
-  --ink: #edf7f3;
-  --muted: #7f918d;
-  --line: rgba(142, 255, 205, 0.16);
-  --line-strong: rgba(142, 255, 205, 0.34);
-  --green: #8effcd;
-  --green-soft: #47d99b;
-  --blue: #71b7ff;
-  --blue-soft: #9ed7ff;
-  --orange: #ffb454;
-  --orange-soft: #ffe08a;
+  --bg: #080b10;
+  --panel: rgba(16, 21, 29, 0.82);
+  --panel-strong: rgba(19, 25, 35, 0.96);
+  --ink: #eef5f7;
+  --muted: #8b9aa3;
+  --line: rgba(137, 160, 178, 0.18);
+  --line-strong: rgba(107, 231, 202, 0.38);
+  --green: #6be7ca;
+  --green-soft: #33c9ab;
+  --blue: #78a8ff;
+  --blue-soft: #9cc4ff;
+  --orange: #f6b35d;
+  --orange-soft: #ffd37c;
   --danger: #ff6b7d;
-  --shadow: 0 22px 80px rgba(0, 0, 0, 0.45);
+  --shadow: 0 18px 70px rgba(0, 0, 0, 0.32);
 }
 
 * {
@@ -25,9 +25,9 @@ body {
   color: var(--ink);
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at 12% -10%, rgba(142, 255, 205, 0.16), transparent 34%),
-    radial-gradient(circle at 95% 0%, rgba(113, 183, 255, 0.15), transparent 30%),
-    linear-gradient(180deg, #070b10 0%, #091018 46%, #06090d 100%);
+    linear-gradient(135deg, rgba(107, 231, 202, 0.08), transparent 26%),
+    linear-gradient(225deg, rgba(120, 168, 255, 0.1), transparent 24%),
+    linear-gradient(180deg, #080b10 0%, #0b1118 48%, #07090d 100%);
 }
 
 body::before {
@@ -36,16 +36,17 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 78%);
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 74%);
 }
 
 .page {
   width: min(1220px, calc(100vw - 40px));
   margin: 0 auto;
-  padding: 32px 0 48px;
+  padding: 34px 0 48px;
+  position: relative;
 }
 
 .topbar,
@@ -59,8 +60,8 @@ body::before {
 .topbar {
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
-  padding: 18px 0 8px;
+  margin-bottom: 22px;
+  padding: 22px 0 10px;
 }
 
 .eyebrow {
@@ -85,10 +86,10 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(28px, 4vw, 48px);
+  font-size: clamp(30px, 4vw, 46px);
   line-height: 1;
   font-weight: 850;
-  text-shadow: 0 0 28px rgba(142, 255, 205, 0.16);
+  text-shadow: 0 0 24px rgba(107, 231, 202, 0.12);
 }
 
 h2 {
@@ -125,12 +126,74 @@ select {
   text-decoration: none;
 }
 
+.language-switch {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  z-index: 3;
+  width: 78px;
+  height: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 2px;
+  color: var(--muted);
+  border: 1px solid rgba(137, 160, 178, 0.24);
+  border-radius: 999px;
+  background: rgba(9, 13, 19, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 34px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 760;
+  line-height: 1;
+  outline: none;
+}
+
+.language-switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--green), var(--blue-soft));
+  box-shadow: 0 6px 18px rgba(107, 231, 202, 0.2);
+  transition: transform 160ms ease;
+}
+
+.language-switch.is-en::before {
+  transform: translateX(0);
+}
+
+.language-switch.is-zh::before {
+  transform: translateX(calc(100% + 0px));
+}
+
+.language-switch span,
+.language-switch strong {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  justify-content: center;
+  color: inherit;
+}
+
+.language-switch strong {
+  color: #06100c;
+}
+
+.language-switch:hover,
+.language-switch:focus-visible {
+  border-color: var(--line-strong);
+}
+
 .export {
   color: #06100c;
   background: linear-gradient(135deg, var(--green), var(--blue-soft));
   border: 1px solid rgba(255, 255, 255, 0.22);
   font-weight: 750;
-  box-shadow: 0 0 26px rgba(142, 255, 205, 0.24);
+  box-shadow: 0 10px 28px rgba(107, 231, 202, 0.16);
 }
 
 .status-pill {
@@ -145,24 +208,24 @@ select {
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .stats article,
 .panel,
 .chart-panel {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: linear-gradient(180deg, var(--panel-strong), var(--panel));
   box-shadow: var(--shadow);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(12px);
 }
 
 .stats article {
   position: relative;
-  min-height: 92px;
-  padding: 16px;
+  min-height: 88px;
+  padding: 15px;
   overflow: hidden;
 }
 
@@ -172,7 +235,7 @@ select {
   inset: 0 0 auto;
   height: 2px;
   background: linear-gradient(90deg, var(--green), transparent);
-  opacity: 0.74;
+  opacity: 0.54;
 }
 
 .stats span,
@@ -183,9 +246,9 @@ select {
 
 .stats strong {
   display: block;
-  margin-top: 12px;
+  margin-top: 10px;
   color: var(--ink);
-  font-size: clamp(20px, 2.6vw, 30px);
+  font-size: clamp(20px, 2.4vw, 29px);
   font-weight: 820;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -193,7 +256,7 @@ select {
 
 .chart-panel,
 .panel {
-  padding: 18px;
+  padding: 17px;
 }
 
 .chart-panel {
@@ -209,12 +272,12 @@ select {
 .panel-title h2::before {
   content: "";
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   margin-right: 9px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 16px var(--green);
+  box-shadow: 0 0 12px rgba(107, 231, 202, 0.6);
   vertical-align: 1px;
 }
 
@@ -267,8 +330,8 @@ select {
   min-width: 8px;
   height: var(--h);
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(180deg, var(--orange-soft), var(--orange));
-  box-shadow: 0 0 22px rgba(255, 180, 84, 0.25);
+  background: linear-gradient(180deg, var(--green), var(--blue));
+  box-shadow: 0 0 18px rgba(107, 231, 202, 0.18);
   position: relative;
 }
 
@@ -277,8 +340,8 @@ select {
   position: absolute;
   left: 50%;
   top: -18px;
-  transform: translateX(-50%) rotate(-18deg);
-  color: rgba(255, 224, 138, 0.9);
+  transform: translateX(-50%);
+  color: rgba(238, 245, 247, 0.78);
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -296,12 +359,6 @@ select {
   line-height: 1.05;
   text-align: center;
   white-space: nowrap;
-}
-
-.bar-label strong {
-  color: rgba(237, 247, 243, 0.8);
-  font-size: 10px;
-  font-weight: 700;
 }
 
 .line-chart {
@@ -336,9 +393,19 @@ select {
 }
 
 .line-label,
-.line-axis-label {
+.line-axis-label,
+.line-point-value {
   fill: var(--muted);
   font-size: 11px;
+}
+
+.line-point-value {
+  fill: rgba(238, 245, 247, 0.88);
+  font-weight: 760;
+  paint-order: stroke;
+  stroke: rgba(7, 9, 13, 0.78);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 .line-axis-label {
@@ -368,6 +435,21 @@ select {
   gap: 12px;
   min-height: 38px;
   font-size: 13px;
+}
+
+.project-ranking {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.project-ranking::-webkit-scrollbar {
+  width: 6px;
+}
+
+.project-ranking::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(137, 160, 178, 0.32);
 }
 
 .rank-name {
@@ -402,7 +484,7 @@ select {
   overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(1, 5, 8, 0.28);
+  background: rgba(6, 10, 15, 0.42);
 }
 
 .usage-table {
@@ -428,9 +510,9 @@ select {
 }
 
 .usage-table th {
-  color: var(--green);
+  color: rgba(238, 245, 247, 0.82);
   font-weight: 800;
-  background: rgba(142, 255, 205, 0.06);
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .usage-table tbody tr:hover {

@@ -27,6 +27,8 @@ type PageData struct {
 	DailyRequests []usage.Bucket
 	ModelRows     []UsageRow
 	Grain         usage.Grain
+	Lang          Lang
+	Unresolved    string
 }
 
 type UsageRow struct {
@@ -48,6 +50,7 @@ func NewServer(events []usage.Event, templateDir string, staticDir string) (*Ser
 		"json":    templateJSON,
 		"format":  formatInt,
 		"compact": formatCompact,
+		"t":       func(data PageData, key string) string { return translate(data.Lang, key) },
 	}
 	tmpl, err := template.New("layout.html").Funcs(funcs).ParseFiles(
 		filepath.Join(templateDir, "layout.html"),
@@ -114,26 +117,29 @@ func (s *Server) Routes() http.Handler {
 
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 	grain := parseGrain(r)
+	lang := parseLang(r.URL.Query().Get("lang"))
 	data := PageData{
 		GeneratedAt:   time.Now().Format("2006-01-02 15:04:05"),
 		Dashboard:     usage.BuildDashboard(s.events, grain),
 		DailyRequests: usage.BuildDashboard(s.events, usage.GrainDay).Trend,
-		ModelRows:     modelRows(s.events),
 		Grain:         grain,
+		Lang:          lang,
+		Unresolved:    translate(lang, "unresolved"),
 	}
+	data.ModelRows = modelRows(s.events, data.Unresolved)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := s.templates.ExecuteTemplate(w, "layout.html", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func modelRows(events []usage.Event) []UsageRow {
+func modelRows(events []usage.Event, unresolved string) []UsageRow {
 	byModel := map[string]*UsageRow{}
 	for _, event := range events {
 		period := event.OccurredAt.Format("2006-01-02")
 		model := event.ModelName
 		if model == "" {
-			model = "unknown"
+			model = unresolved
 		}
 		tool := displayTool(event.ToolName)
 		key := period + "\x00" + tool + "\x00" + model

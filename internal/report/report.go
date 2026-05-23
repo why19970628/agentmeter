@@ -15,6 +15,7 @@ import (
 type Options struct {
 	Format string
 	Group  string
+	Lang   string
 }
 
 type Row struct {
@@ -50,14 +51,22 @@ func FilterPeriod(events []usage.Event, period string, now time.Time) []usage.Ev
 func Render(events []usage.Event, opts Options) string {
 	rows := BuildRows(events, opts.Group)
 	label := groupLabel(opts.Group)
+	if opts.Lang == "zh-CN" {
+		label = groupLabelZH(opts.Group)
+		for i := range rows {
+			if rows[i].Source == "Total" {
+				rows[i].Source = "总计"
+			}
+		}
+	}
 	switch opts.Format {
 	case "json":
 		data, _ := json.MarshalIndent(rows, "", "  ")
 		return string(data) + "\n"
 	case "markdown":
-		return renderMarkdownWithLabel(rows, label)
+		return renderMarkdownWithLang(rows, label, opts.Lang)
 	default:
-		return renderTableWithLabel(rows, label)
+		return renderTableWithLang(rows, label, opts.Lang)
 	}
 }
 
@@ -111,9 +120,17 @@ func renderTable(rows []Row) string {
 }
 
 func renderTableWithLabel(rows []Row, label string) string {
+	return renderTableWithLang(rows, label, "")
+}
+
+func renderTableWithLang(rows []Row, label string, lang string) string {
 	var buf bytes.Buffer
 	writer := tabwriter.NewWriter(&buf, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(writer, "%s\tInput Tokens\tOutput Tokens\tCache Read\tCache Write\tReasoning\tTool Tokens\tTotal Tokens\tEst. USD\n", label)
+	headers := []string{label, "Input Tokens", "Output Tokens", "Cache Read", "Cache Write", "Reasoning", "Tool Tokens", "Total Tokens", "Est. USD"}
+	if lang == "zh-CN" {
+		headers = []string{label, "输入 Tokens", "输出 Tokens", "缓存读取", "缓存写入", "推理 Tokens", "工具 Tokens", "总 Tokens", "预估费用(USD)"}
+	}
+	fmt.Fprintf(writer, "%s\n", strings.Join(headers, "\t"))
 	for _, row := range rows {
 		fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t$%.3f\n",
 			row.Source,
@@ -136,8 +153,16 @@ func renderMarkdown(rows []Row) string {
 }
 
 func renderMarkdownWithLabel(rows []Row, label string) string {
+	return renderMarkdownWithLang(rows, label, "")
+}
+
+func renderMarkdownWithLang(rows []Row, label string, lang string) string {
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "| %s | Input Tokens | Output Tokens | Cache Read | Cache Write | Reasoning | Tool Tokens | Total Tokens | Est. USD |\n", label)
+	headers := []string{label, "Input Tokens", "Output Tokens", "Cache Read", "Cache Write", "Reasoning", "Tool Tokens", "Total Tokens", "Est. USD"}
+	if lang == "zh-CN" {
+		headers = []string{label, "输入 Tokens", "输出 Tokens", "缓存读取", "缓存写入", "推理 Tokens", "工具 Tokens", "总 Tokens", "预估费用(USD)"}
+	}
+	fmt.Fprintf(&buf, "| %s |\n", strings.Join(headers, " | "))
 	buf.WriteString("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n")
 	for _, row := range rows {
 		fmt.Fprintf(&buf, "| %s | %s | %s | %s | %s | %s | %s | %s | $%.3f |\n",
@@ -167,6 +192,13 @@ func groupLabel(group string) string {
 		return "Model"
 	}
 	return "Source"
+}
+
+func groupLabelZH(group string) string {
+	if group == "model" {
+		return "模型"
+	}
+	return "来源"
 }
 
 func groupName(event usage.Event, group string) string {

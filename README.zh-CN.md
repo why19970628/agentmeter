@@ -61,6 +61,12 @@ go run . summary -period all -group model -paths ~/.codex,~/.claude,~/.gemini
 go run . summary -period week -format json -paths ~/.codex
 ```
 
+中文 CLI 表头：
+
+```bash
+go run . summary -period all -group model -lang zh-CN -paths examples
+```
+
 Markdown 输出：
 
 ```bash
@@ -111,10 +117,11 @@ Web 仪表盘用于本地查看：
 
 - 总 tokens、输入/输出 tokens、缓存 tokens、推理 tokens、请求数、模型数。
 - Token 用量趋势，并展示每日简化用量。
-- 每日 API 请求次数折线图。
-- 工具排行和项目路径排行。
+- 每日 API 请求次数折线图，并在每日点位显示请求数。
+- 工具排行和项目排行；项目排行只显示项目名，项目较多时可滚动查看。
 - 按 `日期 + 工具 + 模型` 聚合的模型用量明细。
 - CSV 导出。
+- Web 默认英文，可点击按钮在中文/英文之间切换，也支持 `?lang=zh-CN` 或 `?lang=en`。
 
 ## 数据来源
 
@@ -179,6 +186,8 @@ AgentMeter 支持扁平和嵌套的 usage 结构，例如：
   }
 }
 ```
+
+模型和项目字段会从常见别名中解析，例如 `model_id`、`modelId`、`model_slug`、`workspace_path`、`current_working_directory`、`root_path`。AgentMeter 也会根据同一日志文件中的 `session_id` 上下文，把前后出现的模型/项目信息补到用量记录上。
 
 ## 费用估算
 

@@ -89,3 +89,15 @@ func TestRenderTableIncludesExtendedTokenColumns(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderTableSupportsChineseHeaders(t *testing.T) {
+	events := []usage.Event{{ToolName: "codex", ModelName: "gpt-5", InputTokens: 100, TotalTokens: 100}}
+
+	got := Render(events, Options{Format: "table", Group: "model", Lang: "zh-CN"})
+
+	for _, want := range []string{"模型", "输入 Tokens", "总 Tokens", "预估费用"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("chinese table output missing %q:\n%s", want, got)
+		}
+	}
+}

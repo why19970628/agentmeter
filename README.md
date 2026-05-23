@@ -61,6 +61,12 @@ JSON output for scripts:
 go run . summary -period week -format json -paths ~/.codex
 ```
 
+Chinese CLI headers:
+
+```bash
+go run . summary -period all -group model -lang zh-CN -paths examples
+```
+
 Markdown output:
 
 ```bash
@@ -111,10 +117,11 @@ The Web dashboard is designed for local inspection:
 
 - Summary cards for total tokens, input/output tokens, cache tokens, reasoning tokens, request count, and model count.
 - Token usage trend with compact daily values.
-- Daily API request count line chart.
-- Tool and project rankings.
+- Daily API request count line chart with per-day request labels.
+- Tool and project rankings; project ranking shows project names only and scrolls when many projects exist.
 - Model usage details grouped by `day + tool + model`.
 - CSV export for further analysis.
+- English UI by default, with a one-click Chinese/English toggle. You can also use `?lang=zh-CN` or `?lang=en`.
 
 ## Data Sources
 
@@ -179,6 +186,8 @@ It also understands common vendor-specific shapes such as:
   }
 }
 ```
+
+Model and project fields are resolved from common aliases such as `model_id`, `modelId`, `model_slug`, `workspace_path`, `current_working_directory`, and `root_path`. AgentMeter also uses `session_id` context within a log file to attach later or earlier model/project metadata to usage rows.
 
 ## Cost Estimate
 

@@ -44,4 +44,10 @@ func TestBuildDashboardAggregatesByDayAndRanksTools(t *testing.T) {
 	if got.ToolRanking[0].Name != "claude-code" || got.ToolRanking[0].TotalTokens != 280 {
 		t.Fatalf("top tool = %+v, want claude-code total 280", got.ToolRanking[0])
 	}
+	if got.ProjectRanking[0].Name != "/work/b" || got.ProjectRanking[0].TotalTokens != 280 {
+		t.Fatalf("top project = %+v, want /work/b total 280", got.ProjectRanking[0])
+	}
+	if got.ProjectRanking[1].Name != "/work/a" || got.ProjectRanking[1].TotalTokens != 200 {
+		t.Fatalf("second project = %+v, want /work/a total 200", got.ProjectRanking[1])
+	}
 }

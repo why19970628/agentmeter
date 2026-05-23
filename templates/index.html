@@ -1,69 +1,78 @@
 {{ define "content" }}
 <main class="page">
+  <button
+    id="langToggle"
+    class="language-switch {{ if eq .Lang "zh-CN" }}is-zh{{ else }}is-en{{ end }}"
+    type="button"
+    aria-label="{{ t . "language" }}"
+    data-next-lang="{{ if eq .Lang "en" }}zh-CN{{ else }}en{{ end }}"
+  >
+    {{ if eq .Lang "en" }}<span>EN</span><strong>中文</strong>{{ else }}<strong>EN</strong><span>中文</span>{{ end }}
+  </button>
   <header class="topbar">
     <div>
       <p class="eyebrow">AgentMeter</p>
-      <h1>本地 Agent 用量统计</h1>
-      <p class="subtitle">Offline-first token usage monitor</p>
+      <h1>{{ t . "title" }}</h1>
+      <p class="subtitle">{{ t . "subtitle" }}</p>
     </div>
     <div class="actions">
       <span class="status-pill">LOCAL ONLY</span>
-      <select id="grainSelect" aria-label="统计粒度">
-        <option value="day" {{ if eq .Grain "day" }}selected{{ end }}>按天</option>
-        <option value="week" {{ if eq .Grain "week" }}selected{{ end }}>按星期</option>
-        <option value="month" {{ if eq .Grain "month" }}selected{{ end }}>按月</option>
+      <select id="grainSelect" aria-label="{{ t . "grain_label" }}">
+        <option value="day" {{ if eq .Grain "day" }}selected{{ end }}>{{ t . "day" }}</option>
+        <option value="week" {{ if eq .Grain "week" }}selected{{ end }}>{{ t . "week" }}</option>
+        <option value="month" {{ if eq .Grain "month" }}selected{{ end }}>{{ t . "month" }}</option>
       </select>
-      <a class="export" href="/export.csv">导出</a>
+      <a class="export" href="/export.csv">{{ t . "export" }}</a>
     </div>
   </header>
 
   <section class="stats">
     <article>
-      <span>总 Tokens</span>
+      <span>{{ t . "total_tokens" }}</span>
       <strong title="{{ format .Dashboard.Summary.TotalTokens }}">{{ compact .Dashboard.Summary.TotalTokens }}</strong>
     </article>
     <article>
-      <span>输入 Tokens</span>
+      <span>{{ t . "input_tokens" }}</span>
       <strong title="{{ format .Dashboard.Summary.InputTokens }}">{{ compact .Dashboard.Summary.InputTokens }}</strong>
     </article>
     <article>
-      <span>输出 Tokens</span>
+      <span>{{ t . "output_tokens" }}</span>
       <strong title="{{ format .Dashboard.Summary.OutputTokens }}">{{ compact .Dashboard.Summary.OutputTokens }}</strong>
     </article>
     <article>
-      <span>缓存读取</span>
+      <span>{{ t . "cache_read" }}</span>
       <strong title="{{ format .Dashboard.Summary.CacheReadTokens }}">{{ compact .Dashboard.Summary.CacheReadTokens }}</strong>
     </article>
     <article>
-      <span>缓存写入</span>
+      <span>{{ t . "cache_write" }}</span>
       <strong title="{{ format .Dashboard.Summary.CacheWriteTokens }}">{{ compact .Dashboard.Summary.CacheWriteTokens }}</strong>
     </article>
     <article>
-      <span>推理 Tokens</span>
+      <span>{{ t . "reasoning_tokens" }}</span>
       <strong title="{{ format .Dashboard.Summary.ReasoningTokens }}">{{ compact .Dashboard.Summary.ReasoningTokens }}</strong>
     </article>
     <article>
-      <span>请求次数</span>
+      <span>{{ t . "request_count" }}</span>
       <strong title="{{ format .Dashboard.Summary.RequestCount }}">{{ compact .Dashboard.Summary.RequestCount }}</strong>
     </article>
     <article>
-      <span>模型数</span>
+      <span>{{ t . "model_count" }}</span>
       <strong>{{ .Dashboard.Summary.ModelCount }}</strong>
     </article>
   </section>
 
   <section class="chart-panel">
     <div class="panel-title">
-      <h2>Token 用量趋势</h2>
-      <span>单位：tokens · 生成时间 {{ .GeneratedAt }}</span>
+      <h2>{{ t . "token_trend" }}</h2>
+      <span>{{ t . "unit_generated" }} {{ .GeneratedAt }}</span>
     </div>
     <div id="trendChart" class="bar-chart" data-values='{{ json .Dashboard.Trend }}'></div>
   </section>
 
   <section class="chart-panel">
     <div class="panel-title">
-      <h2>每日 API 请求次数</h2>
-      <span>按自然日统计</span>
+      <h2>{{ t . "daily_requests" }}</h2>
+      <span>{{ t . "by_day" }}</span>
     </div>
     <div id="requestChart" class="line-chart" data-values='{{ json .DailyRequests }}'></div>
   </section>
@@ -71,36 +80,36 @@
   <section class="grid">
     <article class="panel">
       <div class="panel-title">
-        <h2>工具排行</h2>
+        <h2>{{ t . "tool_ranking" }}</h2>
       </div>
-      <div class="ranking" data-ranking='{{ json .Dashboard.ToolRanking }}'></div>
+      <div class="ranking" data-ranking-kind="tool" data-ranking='{{ json .Dashboard.ToolRanking }}'></div>
     </article>
     <article class="panel">
       <div class="panel-title">
-        <h2>项目路径排行</h2>
+        <h2>{{ t . "project_ranking" }}</h2>
       </div>
-      <div class="ranking" data-ranking='{{ json .Dashboard.ProjectRanking }}'></div>
+      <div class="ranking project-ranking" data-ranking-kind="project" data-ranking='{{ json .Dashboard.ProjectRanking }}'></div>
     </article>
     <article class="panel wide">
       <div class="panel-title">
-        <h2>模型用量明细</h2>
-        <span>按每日 + 模型聚合</span>
+        <h2>{{ t . "model_details" }}</h2>
+        <span>{{ t . "model_subtitle" }}</span>
       </div>
       <div class="usage-table-wrap">
         <table class="usage-table">
           <thead>
             <tr>
-              <th>Period</th>
-              <th>Tool</th>
-              <th>Model</th>
-              <th>Input Tokens</th>
-              <th>Output Tokens</th>
-              <th>Cache Read</th>
-              <th>Cache Write</th>
-              <th>Reasoning</th>
-              <th>Tool Tokens</th>
-              <th>Total Tokens</th>
-              <th>Est. USD</th>
+              <th>{{ t . "period" }}</th>
+              <th>{{ t . "tool" }}</th>
+              <th>{{ t . "model" }}</th>
+              <th>{{ t . "input_tokens" }}</th>
+              <th>{{ t . "output_tokens" }}</th>
+              <th>{{ t . "cache_read" }}</th>
+              <th>{{ t . "cache_write" }}</th>
+              <th>{{ t . "reasoning_tokens" }}</th>
+              <th>{{ t . "tool_tokens" }}</th>
+              <th>{{ t . "total_tokens" }}</th>
+              <th>{{ t . "est_usd" }}</th>
             </tr>
           </thead>
           <tbody>
@@ -120,7 +129,7 @@
             </tr>
             {{ else }}
             <tr>
-              <td colspan="11" class="empty-cell">暂无模型用量数据</td>
+              <td colspan="11" class="empty-cell">{{ t . "empty_models" }}</td>
             </tr>
             {{ end }}
           </tbody>

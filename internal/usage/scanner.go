@@ -88,8 +88,7 @@ func parseJSONDocument(data []byte, path string, opts ScanOptions) ([]Event, err
 }
 
 func parseJSONLines(r io.Reader, path string, opts ScanOptions) ([]Event, error) {
-	var events []Event
-	context := modelContext{bySession: map[string]string{}}
+	var records []map[string]any
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
 	for scanner.Scan() {
@@ -101,47 +100,73 @@ func parseJSONLines(r io.Reader, path string, opts ScanOptions) ([]Event, error)
 		if err := json.Unmarshal([]byte(line), &record); err != nil {
 			continue
 		}
-		context.remember(record)
-		if event, ok := recordToEvent(record, path, opts); ok {
-			if event.ModelName == "" {
-				event.ModelName = context.lookup(event.SessionID)
-			}
-			events = append(events, event)
+		records = append(records, record)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return parseRecords(records, path, opts), nil
+}
+
+type scanContext struct {
+	latestModel      string
+	latestProject    string
+	modelBySession   map[string]string
+	projectBySession map[string]string
+}
+
+func (c *scanContext) remember(record map[string]any) {
+	sessionID := stringAt(record, "session_id", "sessionId", "conversation_id")
+
+	model := modelNameFrom(record)
+	if model != "" {
+		c.latestModel = model
+		if sessionID != "" {
+			c.modelBySession[sessionID] = model
 		}
 	}
-	return events, scanner.Err()
-}
 
-type modelContext struct {
-	latest    string
-	bySession map[string]string
-}
-
-func (c *modelContext) remember(record map[string]any) {
-	model := firstNonEmpty(stringAt(record, "model_name", "model"), nestedStringAt(record, "model_name", "model"))
-	if model == "" {
-		return
-	}
-	c.latest = model
-	sessionID := stringAt(record, "session_id", "sessionId", "conversation_id")
-	if sessionID != "" {
-		c.bySession[sessionID] = model
+	project := projectPathFrom(record)
+	if project != "" {
+		c.latestProject = project
+		if sessionID != "" {
+			c.projectBySession[sessionID] = project
+		}
 	}
 }
 
-func (c modelContext) lookup(sessionID string) string {
+func (c scanContext) lookupModel(sessionID string) string {
 	if sessionID != "" {
-		if model := c.bySession[sessionID]; model != "" {
+		if model := c.modelBySession[sessionID]; model != "" {
 			return model
 		}
 	}
-	return c.latest
+	return c.latestModel
+}
+
+func (c scanContext) lookupProject(sessionID string) string {
+	if sessionID != "" {
+		if project := c.projectBySession[sessionID]; project != "" {
+			return project
+		}
+	}
+	return c.latestProject
 }
 
 func parseRecords(records []map[string]any, path string, opts ScanOptions) []Event {
 	events := make([]Event, 0, len(records))
+	context := scanContext{modelBySession: map[string]string{}, projectBySession: map[string]string{}}
+	for _, record := range records {
+		context.remember(record)
+	}
 	for _, record := range records {
 		if event, ok := recordToEvent(record, path, opts); ok {
+			if event.ModelName == "" {
+				event.ModelName = context.lookupModel(event.SessionID)
+			}
+			if event.ProjectPath == "" {
+				event.ProjectPath = context.lookupProject(event.SessionID)
+			}
 			events = append(events, event)
 		}
 	}
@@ -213,9 +238,9 @@ func recordToEvent(record map[string]any, path string, opts ScanOptions) (Event,
 
 	return Event{
 		ToolName:         tool,
-		ModelName:        firstNonEmpty(stringAt(record, "model_name", "model"), nestedStringAt(record, "model_name", "model")),
+		ModelName:        modelNameFrom(record),
 		SessionID:        stringAt(record, "session_id", "sessionId", "conversation_id"),
-		ProjectPath:      stringAt(record, "project_path", "project", "cwd"),
+		ProjectPath:      projectPathFrom(record),
 		InputTokens:      input,
 		OutputTokens:     output,
 		CacheReadTokens:  cacheRead,
@@ -227,6 +252,36 @@ func recordToEvent(record map[string]any, path string, opts ScanOptions) (Event,
 		OccurredAt:       occurredAt,
 		SourceFile:       path,
 	}, true
+}
+
+func modelNameFrom(record map[string]any) string {
+	return firstNonEmpty(
+		stringAt(record, "model_name", "model", "model_id", "modelId", "model_slug", "modelSlug"),
+		nestedStringAt(record, "model_name", "model", "model_id", "modelId", "model_slug", "modelSlug"),
+	)
+}
+
+func projectPathFrom(record map[string]any) string {
+	return firstNonEmpty(
+		stringAt(record, projectPathKeys()...),
+		nestedStringAt(record, projectPathKeys()...),
+	)
+}
+
+func projectPathKeys() []string {
+	return []string{
+		"project_path",
+		"project",
+		"cwd",
+		"workspace_path",
+		"workspacePath",
+		"current_working_directory",
+		"currentWorkingDirectory",
+		"root_path",
+		"rootPath",
+		"repo_path",
+		"repoPath",
+	}
 }
 
 func tokenDetail(record map[string]any, objectKey string, valueKey string) int64 {

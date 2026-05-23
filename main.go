@@ -40,11 +40,12 @@ func summary(args []string) {
 	period := fs.String("period", "month", "period: today, week, month, all")
 	format := fs.String("format", "table", "format: table, json, markdown")
 	group := fs.String("group", "source", "group: source, model")
+	lang := fs.String("lang", "en", "language: en, zh-CN")
 	_ = fs.Parse(args)
 
 	events := scanPaths(*paths)
 	events = report.FilterPeriod(events, *period, time.Now())
-	fmt.Print(report.Render(events, report.Options{Format: *format, Group: *group}))
+	fmt.Print(report.Render(events, report.Options{Format: *format, Group: *group, Lang: *lang}))
 }
 
 func serve(args []string) {

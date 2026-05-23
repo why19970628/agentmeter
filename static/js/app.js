@@ -1,15 +1,44 @@
+const pageLang = document.documentElement.lang === "zh-CN" ? "zh-CN" : "en";
+const numberLocale = pageLang === "zh-CN" ? "zh-CN" : "en-US";
+const text = {
+  en: {
+    noTokens: "No local token records found",
+    noData: "No data",
+    noRequests: "No daily request data",
+    requestSuffix: "requests",
+    requestChartLabel: "Daily API request count line chart",
+  },
+  "zh-CN": {
+    noTokens: "未读取到本地 token 记录",
+    noData: "暂无数据",
+    noRequests: "暂无每日请求数据",
+    requestSuffix: "次请求",
+    requestChartLabel: "每日 API 请求次数折线图",
+  },
+};
+
 function formatNumber(value) {
-  return new Intl.NumberFormat("zh-CN").format(value || 0);
+  return new Intl.NumberFormat(numberLocale).format(value || 0);
 }
 
 function formatCompact(value) {
-  return new Intl.NumberFormat("zh-CN", { notation: "compact", maximumFractionDigits: 1 }).format(value || 0);
+  return new Intl.NumberFormat(numberLocale, { notation: "compact", maximumFractionDigits: 1 }).format(value || 0);
 }
 
 function formatShortDate(value) {
   const parts = String(value || "").split("-");
   if (parts.length >= 3) {
     return `${Number(parts[1])}-${Number(parts[2])}`;
+  }
+  return value;
+}
+
+function formatRankingName(name, kind) {
+  const value = String(name || "");
+  if (kind === "project") {
+    const normalized = value.replace(/\\/g, "/").replace(/\/+$/, "");
+    const parts = normalized.split("/").filter(Boolean);
+    return parts[parts.length - 1] || value;
   }
   return value;
 }
@@ -21,7 +50,7 @@ function renderTrend() {
   const max = Math.max(...data.map((item) => item.total_tokens), 1);
   chart.innerHTML = "";
   if (!data.length) {
-    chart.innerHTML = '<p class="empty">未读取到本地 token 记录</p>';
+    chart.innerHTML = `<p class="empty">${text[pageLang].noTokens}</p>`;
     return;
   }
   const ticks = document.createElement("div");
@@ -43,7 +72,7 @@ function renderTrend() {
     bar.title = `${item.key}: ${formatNumber(item.total_tokens)} tokens`;
     const label = document.createElement("div");
     label.className = "bar-label";
-    label.innerHTML = `<span>${formatShortDate(item.key)}</span><strong>${formatCompact(item.total_tokens)}</strong>`;
+    label.innerHTML = `<span>${formatShortDate(item.key)}</span>`;
     wrap.appendChild(bar);
     wrap.appendChild(label);
     chart.appendChild(wrap);
@@ -52,18 +81,21 @@ function renderTrend() {
 
 function renderRankings() {
   for (const root of document.querySelectorAll(".ranking")) {
-    const data = JSON.parse(root.dataset.ranking || "[]").slice(0, 10);
+    const kind = root.dataset.rankingKind || "";
+    const data = JSON.parse(root.dataset.ranking || "[]");
+    const rows = kind === "project" ? data : data.slice(0, 10);
     const max = Math.max(...data.map((item) => item.total_tokens), 1);
     root.innerHTML = "";
-    if (!data.length) {
-      root.innerHTML = '<p class="empty">暂无数据</p>';
+    if (!rows.length) {
+      root.innerHTML = `<p class="empty">${text[pageLang].noData}</p>`;
       continue;
     }
-    for (const item of data) {
+    for (const item of rows) {
+      const name = formatRankingName(item.name, kind);
       const row = document.createElement("div");
       row.className = "rank-row";
       row.innerHTML = `
-        <span class="rank-name" title="${item.name}">${item.name}</span>
+        <span class="rank-name" title="${item.name}">${name}</span>
         <span class="rank-track"><span class="rank-fill" style="--w:${(item.total_tokens / max) * 100}%"></span></span>
         <span class="rank-value">${formatNumber(item.total_tokens)}</span>
       `;
@@ -78,13 +110,13 @@ function renderRequests() {
   const data = JSON.parse(chart.dataset.values || "[]");
   chart.innerHTML = "";
   if (!data.length) {
-    chart.innerHTML = '<p class="empty">暂无每日请求数据</p>';
+    chart.innerHTML = `<p class="empty">${text[pageLang].noRequests}</p>`;
     return;
   }
 
   const width = 1000;
   const height = 260;
-  const pad = { top: 16, right: 22, bottom: 46, left: 58 };
+  const pad = { top: 34, right: 22, bottom: 46, left: 58 };
   const max = Math.max(...data.map((item) => item.request_count), 1);
   const x = (idx) => {
     if (data.length === 1) return width / 2;
@@ -113,17 +145,25 @@ function renderRequests() {
   const dots = data
     .map((item, idx) => `
       <circle class="line-dot" cx="${x(idx).toFixed(1)}" cy="${y(item.request_count).toFixed(1)}" r="4">
-        <title>${item.key}: ${formatNumber(item.request_count)} 次请求</title>
+        <title>${item.key}: ${formatNumber(item.request_count)} ${text[pageLang].requestSuffix}</title>
       </circle>
     `)
     .join("");
+  const pointValues = data
+    .map((item, idx) => {
+      const xx = x(idx).toFixed(1);
+      const yy = Math.max(12, y(item.request_count) - 10).toFixed(1);
+      return `<text class="line-point-value" x="${xx}" y="${yy}" text-anchor="middle">${formatNumber(item.request_count)}</text>`;
+    })
+    .join("");
 
   chart.innerHTML = `
-    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="每日 API 请求次数折线图">
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${text[pageLang].requestChartLabel}">
       ${ticks}
       <path class="line-area" d="${area}"></path>
       <path class="line-path" d="${path}"></path>
       ${dots}
+      ${pointValues}
       ${labels}
     </svg>
   `;
@@ -134,6 +174,15 @@ if (grainSelect) {
   grainSelect.addEventListener("change", () => {
     const url = new URL(window.location.href);
     url.searchParams.set("grain", grainSelect.value);
+    window.location.href = url.toString();
+  });
+}
+
+const langToggle = document.querySelector("#langToggle");
+if (langToggle) {
+  langToggle.addEventListener("click", () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", langToggle.dataset.nextLang || "en");
     window.location.href = url.toString();
   });
 }
