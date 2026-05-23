@@ -25,6 +25,11 @@ function formatCompact(value) {
   return new Intl.NumberFormat(numberLocale, { notation: "compact", maximumFractionDigits: 1 }).format(value || 0);
 }
 
+function parseNumber(value) {
+  const parsed = Number(value || 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function formatShortDate(value) {
   const parts = String(value || "").split("-");
   if (parts.length >= 3) {
@@ -169,6 +174,93 @@ function renderRequests() {
   `;
 }
 
+function uniqueSorted(values) {
+  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
+function setFilterOptions(select, values, allLabel, selectedValue) {
+  select.innerHTML = "";
+  const all = document.createElement("option");
+  all.value = "";
+  all.textContent = allLabel;
+  select.appendChild(all);
+  for (const value of values) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  }
+  select.value = values.includes(selectedValue) ? selectedValue : "";
+}
+
+function recalculateModelTotal(rows, totalRow) {
+  if (!totalRow) return;
+  const totals = {
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    reasoningTokens: 0,
+    toolTokens: 0,
+    totalTokens: 0,
+    estUsd: 0,
+  };
+  for (const row of rows) {
+    totals.inputTokens += parseNumber(row.dataset.inputTokens);
+    totals.outputTokens += parseNumber(row.dataset.outputTokens);
+    totals.cacheReadTokens += parseNumber(row.dataset.cacheReadTokens);
+    totals.cacheWriteTokens += parseNumber(row.dataset.cacheWriteTokens);
+    totals.reasoningTokens += parseNumber(row.dataset.reasoningTokens);
+    totals.toolTokens += parseNumber(row.dataset.toolTokens);
+    totals.totalTokens += parseNumber(row.dataset.totalTokens);
+    totals.estUsd += parseNumber(row.dataset.estUsd);
+  }
+
+  const cells = totalRow.children;
+  if (cells.length < 11) return;
+  cells[3].textContent = formatNumber(totals.inputTokens);
+  cells[4].textContent = formatNumber(totals.outputTokens);
+  cells[5].textContent = formatNumber(totals.cacheReadTokens);
+  cells[6].textContent = formatNumber(totals.cacheWriteTokens);
+  cells[7].textContent = formatNumber(totals.reasoningTokens);
+  cells[8].textContent = formatNumber(totals.toolTokens);
+  cells[9].textContent = formatNumber(totals.totalTokens);
+  cells[10].textContent = `$${totals.estUsd.toFixed(3)}`;
+}
+
+function applyModelFilters() {
+  const toolFilter = document.querySelector("#modelToolFilter");
+  const modelFilter = document.querySelector("#modelNameFilter");
+  const rows = [...document.querySelectorAll(".model-data-row")];
+  const totalRow = document.querySelector(".usage-table .total-row");
+  if (!toolFilter || !modelFilter || !rows.length) return;
+
+  const selectedTool = toolFilter.value;
+  const modelValues = uniqueSorted(rows.filter((row) => !selectedTool || row.dataset.tool === selectedTool).map((row) => row.dataset.model));
+  setFilterOptions(modelFilter, modelValues, modelFilter.dataset.allLabel || "All Models", modelFilter.value);
+
+  const selectedModel = modelFilter.value;
+  const visibleRows = [];
+  for (const row of rows) {
+    const show = (!selectedTool || row.dataset.tool === selectedTool) && (!selectedModel || row.dataset.model === selectedModel);
+    row.hidden = !show;
+    if (show) visibleRows.push(row);
+  }
+  recalculateModelTotal(visibleRows, totalRow);
+}
+
+function setupModelFilters() {
+  const toolFilter = document.querySelector("#modelToolFilter");
+  const modelFilter = document.querySelector("#modelNameFilter");
+  const rows = [...document.querySelectorAll(".model-data-row")];
+  if (!toolFilter || !modelFilter || !rows.length) return;
+
+  setFilterOptions(toolFilter, uniqueSorted(rows.map((row) => row.dataset.tool)), toolFilter.dataset.allLabel || "All Tools", toolFilter.value);
+  setFilterOptions(modelFilter, uniqueSorted(rows.map((row) => row.dataset.model)), modelFilter.dataset.allLabel || "All Models", modelFilter.value);
+  toolFilter.addEventListener("change", applyModelFilters);
+  modelFilter.addEventListener("change", applyModelFilters);
+}
+
 const grainSelect = document.querySelector("#grainSelect");
 if (grainSelect) {
   grainSelect.addEventListener("change", () => {
@@ -190,3 +282,4 @@ if (langToggle) {
 renderTrend();
 renderRequests();
 renderRankings();
+setupModelFilters();

@@ -269,6 +269,10 @@ select {
   margin-bottom: 18px;
 }
 
+.panel-title > div:first-child {
+  min-width: 0;
+}
+
 .panel-title h2::before {
   content: "";
   display: inline-block;
@@ -279,6 +283,19 @@ select {
   background: var(--green);
   box-shadow: 0 0 12px rgba(107, 231, 202, 0.6);
   vertical-align: 1px;
+}
+
+.model-filters {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.model-filters select {
+  max-width: 190px;
+  height: 34px;
+  font-size: 12px;
 }
 
 .bar-chart,
@@ -558,5 +575,20 @@ select {
   .rank-row {
     grid-template-columns: 1fr;
     gap: 7px;
+  }
+
+  .panel-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .model-filters {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .model-filters select {
+    max-width: none;
+    flex: 1 1 150px;
   }
 }

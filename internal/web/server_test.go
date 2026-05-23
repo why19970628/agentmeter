@@ -329,3 +329,34 @@ func TestDailyRequestChartShowsRequestCountsAtEachPoint(t *testing.T) {
 		t.Fatalf("daily request chart point labels should have CSS styling")
 	}
 }
+
+func TestModelUsageDetailsSupportsToolAndModelFilters(t *testing.T) {
+	root := filepath.Join("..", "..")
+	server, err := NewServer([]usage.Event{
+		{ToolName: "codex", ModelName: "gpt-5", InputTokens: 100, OutputTokens: 20, TotalTokens: 120, OccurredAt: time.Date(2026, 5, 2, 10, 0, 0, 0, time.UTC)},
+		{ToolName: "cursor", ModelName: "claude-sonnet-4", InputTokens: 80, OutputTokens: 10, TotalTokens: 90, OccurredAt: time.Date(2026, 5, 2, 11, 0, 0, 0, time.UTC)},
+	}, filepath.Join(root, "templates"), filepath.Join(root, "static"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := httptest.NewRecorder()
+	server.Routes().ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/", nil))
+	body := resp.Body.String()
+
+	for _, want := range []string{`id="modelToolFilter"`, `id="modelNameFilter"`, `data-tool="Codex"`, `data-model="gpt-5"`, `data-total-tokens="120"`} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("model details filter markup missing %q:\n%s", want, body)
+		}
+	}
+
+	script, err := os.ReadFile(filepath.Join(root, "static", "js", "app.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"setupModelFilters", "applyModelFilters", "recalculateModelTotal", "modelToolFilter", "modelNameFilter"} {
+		if !strings.Contains(string(script), want) {
+			t.Fatalf("model details filter script missing %q", want)
+		}
+	}
+}

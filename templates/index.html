@@ -92,8 +92,14 @@
     </article>
     <article class="panel wide">
       <div class="panel-title">
-        <h2>{{ t . "model_details" }}</h2>
-        <span>{{ t . "model_subtitle" }}</span>
+        <div>
+          <h2>{{ t . "model_details" }}</h2>
+          <span>{{ t . "model_subtitle" }}</span>
+        </div>
+        <div class="model-filters">
+          <select id="modelToolFilter" aria-label="{{ t . "tool" }}" data-all-label="{{ t . "all_tools" }}"></select>
+          <select id="modelNameFilter" aria-label="{{ t . "model" }}" data-all-label="{{ t . "all_models" }}"></select>
+        </div>
       </div>
       <div class="usage-table-wrap">
         <table class="usage-table">
@@ -114,7 +120,19 @@
           </thead>
           <tbody>
             {{ range .ModelRows }}
-            <tr {{ if eq .Name "Total" }}class="total-row"{{ end }}>
+            <tr
+              {{ if eq .Name "Total" }}class="total-row"{{ else }}class="model-data-row"{{ end }}
+              data-tool="{{ .Tool }}"
+              data-model="{{ .Name }}"
+              data-input-tokens="{{ .InputTokens }}"
+              data-output-tokens="{{ .OutputTokens }}"
+              data-cache-read-tokens="{{ .CacheReadTokens }}"
+              data-cache-write-tokens="{{ .CacheWriteTokens }}"
+              data-reasoning-tokens="{{ .ReasoningTokens }}"
+              data-tool-tokens="{{ .ToolTokens }}"
+              data-total-tokens="{{ .TotalTokens }}"
+              data-est-usd="{{ printf "%.6f" .EstUSD }}"
+            >
               <td>{{ .Period }}</td>
               <td>{{ .Tool }}</td>
               <td>{{ .Name }}</td>
