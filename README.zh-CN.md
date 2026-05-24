@@ -8,6 +8,8 @@ AgentMeter 是一个离线优先的本地 AI Agent 用量统计工具。它读�
 
 它不会上传用量数据，不读取 API Key，也不依赖后台服务。所有统计都在本机完成。
 
+![AgentMeter Web 仪表盘](assets/dashboard.en.jpg)
+
 ## 功能特性
 
 - 统计 Codex、Claude Code、Cursor、Gemini CLI 以及通用 JSON/JSONL 日志。
@@ -43,6 +45,40 @@ go run . summary -period all -group model -paths examples
 
 > 说明：如果你的本地 Go 环境有自定义 `GOROOT` 或缓存策略，可以在运行示例前自行设置相关环境变量。
 
+## 安装
+
+从 GitHub Releases 下载对应系统的压缩包，解压后运行 `agentmeter` 二进制文件。
+
+macOS/Linux：
+
+```bash
+tar -xzf agentmeter_VERSION_OS_ARCH.tar.gz
+./agentmeter serve -paths examples
+```
+
+Windows PowerShell：
+
+```powershell
+Expand-Archive .\agentmeter_VERSION_windows_amd64.zip
+.\agentmeter_VERSION_windows_amd64\agentmeter.exe summary -period all -paths examples
+```
+
+通过 Go 从源码目录安装：
+
+```bash
+git clone https://github.com/why19970628/agentmeter.git
+cd agentmeter
+go install .
+```
+
+查看命令帮助：
+
+```bash
+agentmeter summary -help
+agentmeter serve -help
+agentmeter scan -help
+```
+
 ## CLI 用法
 
 按工具汇总：
@@ -51,10 +87,28 @@ go run . summary -period all -group model -paths examples
 go run . summary -period month -paths ~/.codex,~/.claude
 ```
 
+显式按工具汇总：
+
+```bash
+go run . summary -period month -group tool -paths ~/.codex,~/.claude
+```
+
 按模型汇总：
 
 ```bash
 go run . summary -period all -group model -paths ~/.codex,~/.claude,~/.gemini
+```
+
+按工具 + 模型汇总：
+
+```bash
+go run . summary -period all -group tool -group model -paths ~/.codex,~/.claude
+```
+
+也支持合并写法：
+
+```bash
+go run . summary -period all -group tool,model -paths examples
 ```
 
 面向脚本的 JSON 输出：
@@ -239,6 +293,12 @@ git push origin v0.1.0
 ```bash
 make release-snapshot
 ```
+
+版本历史见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 许可证
+
+AgentMeter 使用 [MIT License](LICENSE) 发布。
 
 ## 项目状态
 

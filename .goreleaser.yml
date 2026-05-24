@@ -35,6 +35,9 @@ archives:
     files:
       - README.md
       - README.zh-CN.md
+      - CHANGELOG.md
+      - LICENSE
+      - assets/*
       - examples/*
       - templates/*
       - static/**/*

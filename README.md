@@ -8,6 +8,8 @@ AgentMeter is an offline-first local usage meter for AI agent tools. It reads lo
 
 It does not upload usage data, read API keys, or require a backend service. Everything is computed from files on your machine.
 
+![AgentMeter Web dashboard](assets/dashboard.en.jpg)
+
 ## Features
 
 - Local usage summaries for Codex, Claude Code, Cursor, Gemini CLI, and generic JSON/JSONL logs.
@@ -43,6 +45,40 @@ go run . summary -period all -group model -paths examples
 
 > Note: if your local Go environment has a custom `GOROOT` or cache policy, set those variables in your shell before running the examples.
 
+## Installation
+
+Download a release archive from GitHub Releases, then unpack and run the `agentmeter` binary.
+
+macOS/Linux:
+
+```bash
+tar -xzf agentmeter_VERSION_OS_ARCH.tar.gz
+./agentmeter serve -paths examples
+```
+
+Windows PowerShell:
+
+```powershell
+Expand-Archive .\agentmeter_VERSION_windows_amd64.zip
+.\agentmeter_VERSION_windows_amd64\agentmeter.exe summary -period all -paths examples
+```
+
+Install from a source checkout with Go:
+
+```bash
+git clone https://github.com/why19970628/agentmeter.git
+cd agentmeter
+go install .
+```
+
+Show command help:
+
+```bash
+agentmeter summary -help
+agentmeter serve -help
+agentmeter scan -help
+```
+
 ## CLI Usage
 
 Summary by source:
@@ -51,10 +87,28 @@ Summary by source:
 go run . summary -period month -paths ~/.codex,~/.claude
 ```
 
+Summary by tool:
+
+```bash
+go run . summary -period month -group tool -paths ~/.codex,~/.claude
+```
+
 Summary by model:
 
 ```bash
 go run . summary -period all -group model -paths ~/.codex,~/.claude,~/.gemini
+```
+
+Summary by tool + model:
+
+```bash
+go run . summary -period all -group tool -group model -paths ~/.codex,~/.claude
+```
+
+The combined form is also supported:
+
+```bash
+go run . summary -period all -group tool,model -paths examples
 ```
 
 JSON output for scripts:
@@ -239,6 +293,12 @@ Build a local release snapshot:
 ```bash
 make release-snapshot
 ```
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+## License
+
+AgentMeter is released under the [MIT License](LICENSE).
 
 ## Status
 
