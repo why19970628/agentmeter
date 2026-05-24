@@ -1,5 +1,7 @@
 # AgentMeter
 
+![AgentMeter 封面图](assets/README.zh-CN.png)
+
 [English](README.md)
 
 AgentMeter 是一个离线优先的本地 AI Agent 用量统计工具。它读取本机日志，汇总 token 用量，估算费用，并同时提供适合脚本调用的 CLI 和内置 Web 仪表盘。

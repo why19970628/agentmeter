@@ -1,5 +1,7 @@
 # AgentMeter
 
+![AgentMeter cover](assets/README.en.png)
+
 [中文](README.zh-CN.md)
 
 AgentMeter is an offline-first local usage meter for AI agent tools. It reads local logs, summarizes token usage, estimates cost, and provides both a script-friendly CLI and a built-in Web dashboard.

@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#060910"/>
+      <stop offset="0.55" stop-color="#0b111b"/>
+      <stop offset="1" stop-color="#03060a"/>
+    </linearGradient>
+    <linearGradient id="greenBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7df4ce"/>
+      <stop offset="1" stop-color="#8ebcff"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd48a"/>
+      <stop offset="1" stop-color="#f4a85b"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .title{font:800 82px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Arial,sans-serif;fill:#eef5f7}
+      .accent{fill:#74ecc9}
+      .subtitle{font:700 35px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Arial,sans-serif;fill:#8debcf}
+      .cardTitle{font:800 28px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Arial,sans-serif;fill:#f0f7f7}
+      .cardText{font:500 21px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Arial,sans-serif;fill:#d7e2e4}
+      .small{font:600 18px -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",Arial,sans-serif;fill:#94a4ad}
+      .mono{font:500 20px Menlo,Consolas,monospace;fill:#edf7f3}
+      .monoHead{font:600 17px Menlo,Consolas,monospace;fill:#dbe7e7}
+      .line{stroke:#78eecb;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;filter:url(#glow)}
+      .mutedLine{stroke:#425462;stroke-width:1.2}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <path d="M0 110H170l22-22h96l14 14h58" class="mutedLine" fill="none"/>
+  <path d="M1600 112h-180l-22-22h-96l-14 14h-58" class="mutedLine" fill="none"/>
+  <g opacity=".16">
+    <path d="M0 760h1600M0 670h1600M0 580h1600M0 490h1600M0 400h1600M0 310h1600M0 220h1600" stroke="#ffffff" stroke-width="1"/>
+    <path d="M130 0v900M300 0v900M470 0v900M640 0v900M810 0v900M980 0v900M1150 0v900M1320 0v900M1490 0v900" stroke="#ffffff" stroke-width="1"/>
+  </g>
+
+  <text x="395" y="112" class="title">理解 <tspan class="accent">AgentMeter</tspan></text>
+  <text x="468" y="164" class="subtitle">离线优先的本地 AI Agent Token 用量仪表盘</text>
+
+  <g transform="translate(456 214)">
+    <rect x="0" y="0" width="688" height="350" rx="18" fill="#071019" stroke="#9bb4c8" stroke-width="2" opacity=".96"/>
+    <rect x="0" y="0" width="688" height="38" rx="18" fill="#131b25"/>
+    <circle cx="26" cy="19" r="8" fill="#ff5f57"/><circle cx="54" cy="19" r="8" fill="#ffbd2e"/><circle cx="82" cy="19" r="8" fill="#28c840"/>
+    <text x="336" y="25" text-anchor="middle" class="small">agentmeter</text>
+    <text x="28" y="76" class="mono">$ agentmeter summary -period today -group tool,model</text>
+    <rect x="28" y="104" width="632" height="186" fill="#0a111b" stroke="#8da0aa" stroke-width="1"/>
+    <path d="M28 145h632M28 186h632M28 227h632M28 268h632M236 104v186M370 104v186M500 104v186M596 104v186" stroke="#6e7f89" stroke-width="1"/>
+    <text x="48" y="130" class="monoHead">Tool / Model</text>
+    <text x="252" y="130" class="monoHead">Input</text>
+    <text x="386" y="130" class="monoHead">Output</text>
+    <text x="514" y="130" class="monoHead">Total</text>
+    <text x="608" y="130" class="monoHead">USD</text>
+    <text x="48" y="171" class="mono">Codex / gpt-5</text>
+    <text x="257" y="171" class="mono">142K</text>
+    <text x="396" y="171" class="mono">32K</text>
+    <text x="520" y="171" class="mono">180K</text>
+    <text x="604" y="171" class="mono">$0.49</text>
+    <text x="48" y="212" class="mono">Claude / Sonnet</text>
+    <text x="257" y="212" class="mono">68K</text>
+    <text x="396" y="212" class="mono">18K</text>
+    <text x="520" y="212" class="mono">90K</text>
+    <text x="604" y="212" class="mono">$0.48</text>
+    <text x="48" y="253" class="mono">Gemini / Pro</text>
+    <text x="257" y="253" class="mono">22K</text>
+    <text x="396" y="253" class="mono">7K</text>
+    <text x="520" y="253" class="mono">31K</text>
+    <text x="604" y="253" class="mono">$0.10</text>
+    <text x="28" y="326" class="mono">$ █</text>
+  </g>
+
+  <g transform="translate(50 142)">
+    <rect width="252" height="190" rx="14" fill="#07120c" stroke="#9ff0b7" stroke-width="2"/>
+    <rect x="20" y="20" width="42" height="42" rx="10" fill="url(#greenBlue)"/><text x="41" y="52" text-anchor="middle" class="cardTitle" fill="#07100d">1</text>
+    <text x="24" y="94" class="cardTitle">多来源</text>
+    <text x="24" y="126" class="cardText">Codex / Claude Code</text>
+    <text x="24" y="154" class="cardText">Cursor / Gemini CLI</text>
+  </g>
+  <g transform="translate(50 350)">
+    <rect width="252" height="190" rx="14" fill="#07120c" stroke="#9ff0b7" stroke-width="2"/>
+    <rect x="20" y="20" width="42" height="42" rx="10" fill="url(#greenBlue)"/><text x="41" y="52" text-anchor="middle" class="cardTitle" fill="#07100d">2</text>
+    <text x="24" y="94" class="cardTitle">离线统计</text>
+    <text x="24" y="126" class="cardText">不上传用量数据</text>
+    <text x="24" y="154" class="cardText">数据留在本机</text>
+  </g>
+  <g transform="translate(50 558)">
+    <rect width="252" height="190" rx="14" fill="#151008" stroke="#ffc272" stroke-width="2"/>
+    <rect x="20" y="20" width="42" height="42" rx="10" fill="url(#orange)"/><text x="41" y="52" text-anchor="middle" class="cardTitle" fill="#160d04">3</text>
+    <text x="24" y="94" class="cardTitle">费用估算</text>
+    <text x="24" y="126" class="cardText">内置价格表</text>
+    <text x="24" y="154" class="cardText">离线且可扩展</text>
+  </g>
+
+  <path d="M306 246h92c42 0 42 78 84 78" class="line"/>
+  <path d="M306 454h92c42 0 42-78 84-78" class="line"/>
+  <path d="M1144 342h74c38 0 38-86 76-86" class="line"/>
+  <path d="M1144 434h74c38 0 38 86 76 86" class="line"/>
+
+  <g transform="translate(1300 142)">
+    <rect width="252" height="190" rx="14" fill="#071019" stroke="#8ebcff" stroke-width="2"/>
+    <rect x="20" y="20" width="42" height="42" rx="10" fill="url(#greenBlue)"/><text x="41" y="52" text-anchor="middle" class="cardTitle" fill="#07100d">4</text>
+    <text x="24" y="94" class="cardTitle">Web 仪表盘</text>
+    <text x="24" y="126" class="cardText">Token 趋势</text>
+    <text x="24" y="154" class="cardText">模型筛选</text>
+  </g>
+  <g transform="translate(1300 350)">
+    <rect width="252" height="190" rx="14" fill="#0f0b19" stroke="#b69cff" stroke-width="2"/>
+    <rect x="20" y="20" width="42" height="42" rx="10" fill="#b69cff"/><text x="41" y="52" text-anchor="middle" class="cardTitle" fill="#12091f">5</text>
+    <text x="24" y="94" class="cardTitle">CLI 报告</text>
+    <text x="24" y="126" class="cardText">Table / JSON</text>
+    <text x="24" y="154" class="cardText">Markdown 输出</text>
+  </g>
+  <g transform="translate(1300 558)">
+    <rect width="252" height="190" rx="14" fill="#151008" stroke="#ffc272" stroke-width="2"/>
+    <rect x="20" y="20" width="42" height="42" rx="10" fill="url(#orange)"/><text x="41" y="52" text-anchor="middle" class="cardTitle" fill="#160d04">6</text>
+    <text x="24" y="94" class="cardTitle">发布产物</text>
+    <text x="24" y="126" class="cardText">macOS / Linux</text>
+    <text x="24" y="154" class="cardText">Windows + 校验</text>
+  </g>
+
+  <g transform="translate(330 592)">
+    <rect width="210" height="156" rx="14" fill="#08131d" stroke="#8ebcff" stroke-width="2"/>
+    <text x="24" y="78" class="cardTitle">本地日志</text>
+    <text x="24" y="112" class="cardText">读取本机文件</text>
+  </g>
+  <g transform="translate(575 592)">
+    <rect width="210" height="156" rx="14" fill="#07120c" stroke="#9ff0b7" stroke-width="2"/>
+    <text x="24" y="78" class="cardTitle">解析</text>
+    <text x="24" y="112" class="cardText">嵌套字段</text>
+  </g>
+  <g transform="translate(820 592)">
+    <rect width="210" height="156" rx="14" fill="#151008" stroke="#ffc272" stroke-width="2"/>
+    <text x="24" y="78" class="cardTitle">聚合</text>
+    <text x="24" y="112" class="cardText">工具 / 模型 / 时间</text>
+  </g>
+  <g transform="translate(1065 592)">
+    <rect width="210" height="156" rx="14" fill="#08131d" stroke="#8ebcff" stroke-width="2"/>
+    <text x="24" y="78" class="cardTitle">报告</text>
+    <text x="24" y="112" class="cardText">CLI 和 Web</text>
+  </g>
+  <path d="M545 670h28M790 670h28M1035 670h28" class="line"/>
+
+  <g transform="translate(56 790)">
+    <rect width="1488" height="82" rx="14" fill="#071019" stroke="#415462" stroke-width="2"/>
+    <text x="55" y="34" class="cardTitle">单个 Go 二进制</text><text x="55" y="62" class="small">下载即可运行</text>
+    <text x="438" y="34" class="cardTitle">本地优先</text><text x="438" y="62" class="small">数据不离开你的机器</text>
+    <text x="836" y="34" class="cardTitle">脚本友好</text><text x="836" y="62" class="small">Flags、JSON、Markdown</text>
+    <text x="1210" y="34" class="cardTitle">隐私优先</text><text x="1210" y="62" class="small">无 Key、无后台</text>
+  </g>
+</svg>
