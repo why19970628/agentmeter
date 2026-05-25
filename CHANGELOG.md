@@ -6,6 +6,9 @@ This project follows semantic versioning for release tags.
 
 ## Unreleased
 
+- Added Web dark/light theme switching.
+- Added a global readable/raw token display toggle, defaulting to readable counts.
+- Moved Web display controls into the page header and added static asset versioning to avoid stale UI scripts.
 - Added MIT license.
 - Added dashboard screenshot and fuller installation instructions.
 - Added common CLI examples for tool, model, tool + model, path selection, and Web startup.

@@ -14,6 +14,61 @@
   --orange-soft: #ffd37c;
   --danger: #ff6b7d;
   --shadow: 0 18px 70px rgba(0, 0, 0, 0.32);
+  --body-bg:
+    linear-gradient(135deg, rgba(107, 231, 202, 0.08), transparent 26%),
+    linear-gradient(225deg, rgba(120, 168, 255, 0.1), transparent 24%),
+    linear-gradient(180deg, #080b10 0%, #0b1118 48%, #07090d 100%);
+  --grid-line-a: rgba(255, 255, 255, 0.028);
+  --grid-line-b: rgba(255, 255, 255, 0.02);
+  --control-bg: rgba(8, 14, 20, 0.92);
+  --switch-bg: rgba(9, 13, 19, 0.86);
+  --switch-ink: #06100c;
+  --chart-value: rgba(238, 245, 247, 0.78);
+  --line-dot-stroke: #071018;
+  --line-point-fill: rgba(238, 245, 247, 0.88);
+  --line-point-stroke: rgba(7, 9, 13, 0.78);
+  --rank-name: rgba(237, 247, 243, 0.92);
+  --rank-track: rgba(255, 255, 255, 0.08);
+  --table-bg: rgba(6, 10, 15, 0.42);
+  --table-head: rgba(255, 255, 255, 0.035);
+  --table-border: rgba(142, 255, 205, 0.12);
+  --table-hover: rgba(113, 183, 255, 0.06);
+  --table-total: rgba(142, 255, 205, 0.05);
+}
+
+body[data-theme="light"] {
+  --bg: #f6f8fb;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-strong: rgba(255, 255, 255, 0.96);
+  --ink: #17212b;
+  --muted: #637281;
+  --line: rgba(36, 54, 68, 0.13);
+  --line-strong: rgba(28, 164, 140, 0.32);
+  --green: #0f9f83;
+  --green-soft: #19b797;
+  --blue: #3f78d4;
+  --blue-soft: #91c3ff;
+  --shadow: 0 18px 58px rgba(28, 42, 56, 0.1);
+  --body-bg:
+    linear-gradient(135deg, rgba(25, 183, 151, 0.12), transparent 25%),
+    linear-gradient(225deg, rgba(63, 120, 212, 0.11), transparent 25%),
+    linear-gradient(180deg, #fbfcff 0%, #f2f6fa 54%, #edf3f7 100%);
+  --grid-line-a: rgba(36, 54, 68, 0.045);
+  --grid-line-b: rgba(36, 54, 68, 0.035);
+  --control-bg: rgba(255, 255, 255, 0.92);
+  --switch-bg: rgba(255, 255, 255, 0.88);
+  --switch-ink: #05231d;
+  --chart-value: rgba(23, 33, 43, 0.74);
+  --line-dot-stroke: #ffffff;
+  --line-point-fill: rgba(23, 33, 43, 0.86);
+  --line-point-stroke: rgba(255, 255, 255, 0.82);
+  --rank-name: rgba(23, 33, 43, 0.92);
+  --rank-track: rgba(36, 54, 68, 0.08);
+  --table-bg: rgba(255, 255, 255, 0.62);
+  --table-head: rgba(28, 164, 140, 0.07);
+  --table-border: rgba(28, 164, 140, 0.14);
+  --table-hover: rgba(63, 120, 212, 0.07);
+  --table-total: rgba(15, 159, 131, 0.08);
 }
 
 * {
@@ -24,10 +79,8 @@ body {
   margin: 0;
   color: var(--ink);
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background:
-    linear-gradient(135deg, rgba(107, 231, 202, 0.08), transparent 26%),
-    linear-gradient(225deg, rgba(120, 168, 255, 0.1), transparent 24%),
-    linear-gradient(180deg, #080b10 0%, #0b1118 48%, #07090d 100%);
+  background: var(--body-bg);
+  transition: color 180ms ease, background 180ms ease;
 }
 
 body::before {
@@ -36,8 +89,8 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    linear-gradient(var(--grid-line-a) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-b) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 74%);
 }
@@ -105,7 +158,8 @@ h2 {
 
 select,
 .export,
-.status-pill {
+.status-pill,
+.token-display-toggle {
   height: 38px;
   border-radius: 8px;
   padding: 0 13px;
@@ -115,24 +169,51 @@ select,
 select {
   color: var(--ink);
   border: 1px solid var(--line);
-  background: rgba(8, 14, 20, 0.92);
+  background: var(--control-bg);
   outline: none;
 }
 
 .export,
-.status-pill {
+.status-pill,
+.token-display-toggle {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
 }
 
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.token-display-toggle {
+  justify-content: center;
+  min-width: 78px;
+  color: var(--green);
+  border: 1px solid var(--line);
+  background: var(--control-bg);
+  cursor: pointer;
+  font-weight: 760;
+  outline: none;
+}
+
+.token-display-toggle[aria-pressed="true"] {
+  color: var(--switch-ink);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: linear-gradient(135deg, var(--green), var(--blue-soft));
+}
+
+.token-display-toggle:hover,
+.token-display-toggle:focus-visible {
+  border-color: var(--line-strong);
+}
+
 .language-switch {
-  position: absolute;
-  top: 16px;
-  right: 0;
-  z-index: 3;
   width: 78px;
   height: 30px;
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
@@ -140,7 +221,7 @@ select {
   color: var(--muted);
   border: 1px solid rgba(137, 160, 178, 0.24);
   border-radius: 999px;
-  background: rgba(9, 13, 19, 0.86);
+  background: var(--switch-bg);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 34px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   font-size: 11px;
@@ -180,16 +261,62 @@ select {
 }
 
 .language-switch strong {
-  color: #06100c;
+  color: var(--switch-ink);
+}
+
+.theme-switch {
+  position: relative;
+  width: 78px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--muted);
+  border: 1px solid rgba(137, 160, 178, 0.24);
+  border-radius: 999px;
+  background: var(--switch-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 34px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  outline: none;
+}
+
+.theme-switch::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--green), var(--blue-soft));
+  opacity: 0.18;
+}
+
+.theme-icon {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.theme-icon-light {
+  display: none;
+}
+
+body[data-theme="light"] .theme-icon-dark {
+  display: none;
+}
+
+body[data-theme="light"] .theme-icon-light {
+  display: inline;
 }
 
 .language-switch:hover,
-.language-switch:focus-visible {
+.language-switch:focus-visible,
+.theme-switch:hover,
+.theme-switch:focus-visible {
   border-color: var(--line-strong);
 }
 
 .export {
-  color: #06100c;
+  color: var(--switch-ink);
   background: linear-gradient(135deg, var(--green), var(--blue-soft));
   border: 1px solid rgba(255, 255, 255, 0.22);
   font-weight: 750;
@@ -319,7 +446,7 @@ select {
   position: absolute;
   inset: 0 auto 0 0;
   width: 48px;
-  border-right: 1px solid rgba(142, 255, 205, 0.12);
+  border-right: 1px solid var(--table-border);
 }
 
 .bar-axis span {
@@ -358,7 +485,7 @@ select {
   left: 50%;
   top: -18px;
   transform: translateX(-50%);
-  color: rgba(238, 245, 247, 0.78);
+  color: var(--chart-value);
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -405,7 +532,7 @@ select {
 
 .line-dot {
   fill: var(--blue);
-  stroke: #071018;
+  stroke: var(--line-dot-stroke);
   stroke-width: 2;
 }
 
@@ -417,10 +544,10 @@ select {
 }
 
 .line-point-value {
-  fill: rgba(238, 245, 247, 0.88);
+  fill: var(--line-point-fill);
   font-weight: 760;
   paint-order: stroke;
-  stroke: rgba(7, 9, 13, 0.78);
+  stroke: var(--line-point-stroke);
   stroke-width: 3px;
   stroke-linejoin: round;
 }
@@ -430,7 +557,7 @@ select {
 }
 
 .line-grid {
-  stroke: rgba(142, 255, 205, 0.1);
+  stroke: var(--table-border);
   stroke-width: 1;
 }
 
@@ -471,7 +598,7 @@ select {
 
 .rank-name {
   overflow: hidden;
-  color: rgba(237, 247, 243, 0.92);
+  color: var(--rank-name);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -480,7 +607,7 @@ select {
   height: 10px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--rank-track);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
@@ -501,7 +628,7 @@ select {
   overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(6, 10, 15, 0.42);
+  background: var(--table-bg);
 }
 
 .usage-table {
@@ -514,7 +641,7 @@ select {
 .usage-table th,
 .usage-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(142, 255, 205, 0.12);
+  border-bottom: 1px solid var(--table-border);
   text-align: right;
   white-space: nowrap;
 }
@@ -527,20 +654,20 @@ select {
 }
 
 .usage-table th {
-  color: rgba(238, 245, 247, 0.82);
+  color: var(--ink);
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--table-head);
 }
 
 .usage-table tbody tr:hover {
-  background: rgba(113, 183, 255, 0.06);
+  background: var(--table-hover);
 }
 
 .usage-table .total-row td {
   color: var(--ink);
   border-top: 1px dashed var(--line-strong);
   font-weight: 820;
-  background: rgba(142, 255, 205, 0.05);
+  background: var(--table-total);
 }
 
 .empty-cell,

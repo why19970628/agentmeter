@@ -1,5 +1,7 @@
 const pageLang = document.documentElement.lang === "zh-CN" ? "zh-CN" : "en";
 const numberLocale = pageLang === "zh-CN" ? "zh-CN" : "en-US";
+const themeStorageKey = "agentmeter-theme";
+const tokenDisplayStorageKey = "agentmeter-token-display";
 const text = {
   en: {
     noTokens: "No local token records found",
@@ -7,6 +9,8 @@ const text = {
     noRequests: "No daily request data",
     requestSuffix: "requests",
     requestChartLabel: "Daily API request count line chart",
+    tokenCompact: "Readable",
+    tokenRaw: "Raw",
   },
   "zh-CN": {
     noTokens: "未读取到本地 token 记录",
@@ -14,8 +18,46 @@ const text = {
     noRequests: "暂无每日请求数据",
     requestSuffix: "次请求",
     requestChartLabel: "每日 API 请求次数折线图",
+    tokenCompact: "友好数量",
+    tokenRaw: "原始数量",
   },
 };
+
+function readSavedTheme() {
+  try {
+    return localStorage.getItem(themeStorageKey);
+  } catch (_) {
+    return "";
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    localStorage.setItem(themeStorageKey, theme);
+  } catch (_) {
+    // Theme persistence is optional when storage is unavailable.
+  }
+}
+
+function applyTheme(theme) {
+  const nextTheme = theme === "light" ? "light" : "dark";
+  document.body.dataset.theme = nextTheme;
+  const toggle = document.querySelector("#themeToggle");
+  if (toggle) {
+    toggle.setAttribute("aria-pressed", String(nextTheme === "light"));
+  }
+}
+
+function setupThemeToggle() {
+  applyTheme(readSavedTheme());
+  const toggle = document.querySelector("#themeToggle");
+  if (!toggle) return;
+  toggle.addEventListener("click", () => {
+    const nextTheme = document.body.dataset.theme === "light" ? "dark" : "light";
+    applyTheme(nextTheme);
+    saveTheme(nextTheme);
+  });
+}
 
 function formatNumber(value) {
   return new Intl.NumberFormat(numberLocale).format(value || 0);
@@ -23,6 +65,10 @@ function formatNumber(value) {
 
 function formatCompact(value) {
   return new Intl.NumberFormat(numberLocale, { notation: "compact", maximumFractionDigits: 1 }).format(value || 0);
+}
+
+function formatTokenValue(value, mode) {
+  return mode === "raw" ? formatNumber(value) : formatCompact(value);
 }
 
 function parseNumber(value) {
@@ -218,14 +264,69 @@ function recalculateModelTotal(rows, totalRow) {
 
   const cells = totalRow.children;
   if (cells.length < 11) return;
-  cells[3].textContent = formatNumber(totals.inputTokens);
-  cells[4].textContent = formatNumber(totals.outputTokens);
-  cells[5].textContent = formatNumber(totals.cacheReadTokens);
-  cells[6].textContent = formatNumber(totals.cacheWriteTokens);
-  cells[7].textContent = formatNumber(totals.reasoningTokens);
-  cells[8].textContent = formatNumber(totals.toolTokens);
-  cells[9].textContent = formatNumber(totals.totalTokens);
+  const tokenTotals = [
+    totals.inputTokens,
+    totals.outputTokens,
+    totals.cacheReadTokens,
+    totals.cacheWriteTokens,
+    totals.reasoningTokens,
+    totals.toolTokens,
+    totals.totalTokens,
+  ];
+  tokenTotals.forEach((value, index) => {
+    const cell = cells[index + 3];
+    cell.dataset.tokenValue = String(value);
+    cell.title = formatNumber(value);
+  });
   cells[10].textContent = `$${totals.estUsd.toFixed(3)}`;
+  applyTokenDisplayMode(currentTokenDisplayMode());
+}
+
+function currentTokenDisplayMode() {
+  return document.body.dataset.tokenDisplay === "raw" ? "raw" : "compact";
+}
+
+function readSavedTokenDisplayMode() {
+  try {
+    return localStorage.getItem(tokenDisplayStorageKey);
+  } catch (_) {
+    return "";
+  }
+}
+
+function saveTokenDisplayMode(mode) {
+  try {
+    localStorage.setItem(tokenDisplayStorageKey, mode);
+  } catch (_) {
+    // Token display persistence is optional when storage is unavailable.
+  }
+}
+
+function applyTokenDisplayMode(mode) {
+  const nextMode = mode === "raw" ? "raw" : "compact";
+  document.body.dataset.tokenDisplay = nextMode;
+  for (const node of document.querySelectorAll("[data-token-value]")) {
+    const value = parseNumber(node.dataset.tokenValue);
+    node.textContent = formatTokenValue(value, nextMode);
+    node.title = formatNumber(value);
+  }
+  const toggle = document.querySelector("#tokenDisplayToggle");
+  if (toggle) {
+    toggle.dataset.tokenMode = nextMode;
+    toggle.setAttribute("aria-pressed", String(nextMode === "raw"));
+    toggle.textContent = nextMode === "raw" ? text[pageLang].tokenRaw : text[pageLang].tokenCompact;
+  }
+}
+
+function setupTokenDisplayToggle() {
+  applyTokenDisplayMode(readSavedTokenDisplayMode());
+  const toggle = document.querySelector("#tokenDisplayToggle");
+  if (!toggle) return;
+  toggle.addEventListener("click", () => {
+    const nextMode = currentTokenDisplayMode() === "raw" ? "compact" : "raw";
+    applyTokenDisplayMode(nextMode);
+    saveTokenDisplayMode(nextMode);
+  });
 }
 
 function applyModelFilters() {
@@ -283,3 +384,5 @@ renderTrend();
 renderRequests();
 renderRankings();
 setupModelFilters();
+setupTokenDisplayToggle();
+setupThemeToggle();

@@ -204,7 +204,7 @@ func TestIndexDefaultsToEnglishAndUsesClickLanguageToggle(t *testing.T) {
 	if !strings.Contains(body, `<html lang="en">`) || !strings.Contains(body, "Local Agent Usage") {
 		t.Fatalf("default page should render in English:\n%s", body)
 	}
-	if !strings.Contains(body, `class="language-switch`) || !strings.Contains(body, `data-next-lang="zh-CN"`) {
+	if !strings.Contains(body, `class="page-controls"`) || !strings.Contains(body, `class="language-switch`) || !strings.Contains(body, `data-next-lang="zh-CN"`) {
 		t.Fatalf("default page should render a top-right language switch to Chinese:\n%s", body)
 	}
 	if !strings.Contains(body, `<span>EN</span>`) || !strings.Contains(body, `<strong>中文</strong>`) {
@@ -212,6 +212,47 @@ func TestIndexDefaultsToEnglishAndUsesClickLanguageToggle(t *testing.T) {
 	}
 	if strings.Contains(body, `id="langSelect"`) {
 		t.Fatalf("language switcher should not be a select dropdown:\n%s", body)
+	}
+}
+
+func TestWebDashboardSupportsThemeToggle(t *testing.T) {
+	root := filepath.Join("..", "..")
+	server, err := NewServer([]usage.Event{
+		{ToolName: "codex", ModelName: "gpt-5", InputTokens: 100, TotalTokens: 100, OccurredAt: time.Date(2026, 5, 2, 10, 0, 0, 0, time.UTC)},
+	}, filepath.Join(root, "templates"), filepath.Join(root, "static"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := httptest.NewRecorder()
+	server.Routes().ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/", nil))
+	body := resp.Body.String()
+
+	for _, want := range []string{`id="themeToggle"`, `data-theme-toggle`, `aria-label="Theme"`} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("index should render a theme toggle fragment %q:\n%s", want, body)
+		}
+	}
+
+	style, err := os.ReadFile(filepath.Join(root, "static", "css", "app.css"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(style), `body[data-theme="light"]`) {
+		t.Fatalf("stylesheet should define light theme variables")
+	}
+	if !strings.Contains(string(style), ".page-controls") || strings.Contains(string(style), ".floating-controls") {
+		t.Fatalf("global controls should live in the page header instead of a floating rail")
+	}
+
+	script, err := os.ReadFile(filepath.Join(root, "static", "js", "app.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"agentmeter-theme", "setupThemeToggle", "document.body.dataset.theme"} {
+		if !strings.Contains(string(script), want) {
+			t.Fatalf("theme toggle script missing %q", want)
+		}
 	}
 }
 
@@ -357,6 +398,36 @@ func TestModelUsageDetailsSupportsToolAndModelFilters(t *testing.T) {
 	for _, want := range []string{"setupModelFilters", "applyModelFilters", "recalculateModelTotal", "modelToolFilter", "modelNameFilter"} {
 		if !strings.Contains(string(script), want) {
 			t.Fatalf("model details filter script missing %q", want)
+		}
+	}
+}
+
+func TestWebDashboardSupportsGlobalTokenDisplayToggle(t *testing.T) {
+	root := filepath.Join("..", "..")
+	server, err := NewServer([]usage.Event{
+		{ToolName: "codex", ModelName: "gpt-5", InputTokens: 7454012675, OutputTokens: 25990787, TotalTokens: 7704105873, OccurredAt: time.Date(2026, 5, 2, 10, 0, 0, 0, time.UTC)},
+	}, filepath.Join(root, "templates"), filepath.Join(root, "static"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := httptest.NewRecorder()
+	server.Routes().ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/", nil))
+	body := resp.Body.String()
+
+	for _, want := range []string{`id="tokenDisplayToggle"`, `data-token-mode-toggle`, `data-token-mode="compact"`, `data-token-value="7454012675"`} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("global token display toggle markup missing %q:\n%s", want, body)
+		}
+	}
+
+	script, err := os.ReadFile(filepath.Join(root, "static", "js", "app.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"agentmeter-token-display", "setupTokenDisplayToggle", "applyTokenDisplayMode", "formatCompact"} {
+		if !strings.Contains(string(script), want) {
+			t.Fatalf("token display toggle script missing %q", want)
 		}
 	}
 }

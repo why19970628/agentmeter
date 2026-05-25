@@ -15,6 +15,7 @@ AgentMeter 是一个离线优先的本地 AI Agent 用量统计工具。它读�
 - 统计 Codex、Claude Code、Cursor、Gemini CLI 以及通用 JSON/JSONL 日志。
 - CLI 支持 `table`、`json`、`markdown` 输出。
 - 内置 Web 仪表盘，展示 token 趋势、每日 API 请求次数、排行和模型明细。
+- Web 支持深色/白色主题、中英文切换，以及友好/原始 token 数量切换。
 - 拆分展示 input、output、cache read、cache write、reasoning、tool tokens。
 - 模型用量明细按 `日期 + 工具 + 模型` 聚合。
 - 基于内置离线模型价格表估算 USD 成本。
@@ -176,6 +177,7 @@ Web 仪表盘用于本地查看：
 - 每日 API 请求次数折线图，并在每日点位显示请求数。
 - 工具排行和项目排行；项目排行只显示项目名，项目较多时可滚动查看。
 - 按 `日期 + 工具 + 模型` 聚合的模型用量明细。
+- 顶部控制区支持深色/白色主题切换，以及友好/原始 token 数量切换，默认展示友好数量。
 - CSV 导出。
 - Web 默认英文，可点击按钮在中文/英文之间切换，也支持 `?lang=zh-CN` 或 `?lang=en`。
 

@@ -15,6 +15,7 @@ It does not upload usage data, read API keys, or require a backend service. Ever
 - Local usage summaries for Codex, Claude Code, Cursor, Gemini CLI, and generic JSON/JSONL logs.
 - CLI output in `table`, `json`, and `markdown` formats.
 - Built-in Web dashboard with token trends, daily API request counts, rankings, and model usage tables.
+- Web controls for dark/light theme, English/Chinese language, and readable/raw token counts.
 - Token breakdowns for input, output, cache read, cache write, reasoning, and tool tokens.
 - Model usage table grouped by day, tool, and model.
 - Estimated USD cost based on a built-in offline model price catalog.
@@ -176,6 +177,7 @@ The Web dashboard is designed for local inspection:
 - Daily API request count line chart with per-day request labels.
 - Tool and project rankings; project ranking shows project names only and scrolls when many projects exist.
 - Model usage details grouped by `day + tool + model`.
+- Header controls for dark/light theme and readable/raw token display. Readable token counts are the default.
 - CSV export for further analysis.
 - English UI by default, with a one-click Chinese/English toggle. You can also use `?lang=zh-CN` or `?lang=en`.
 

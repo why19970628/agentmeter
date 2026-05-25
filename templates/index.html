@@ -1,14 +1,5 @@
 {{ define "content" }}
 <main class="page">
-  <button
-    id="langToggle"
-    class="language-switch {{ if eq .Lang "zh-CN" }}is-zh{{ else }}is-en{{ end }}"
-    type="button"
-    aria-label="{{ t . "language" }}"
-    data-next-lang="{{ if eq .Lang "en" }}zh-CN{{ else }}en{{ end }}"
-  >
-    {{ if eq .Lang "en" }}<span>EN</span><strong>中文</strong>{{ else }}<strong>EN</strong><span>中文</span>{{ end }}
-  </button>
   <header class="topbar">
     <div>
       <p class="eyebrow">AgentMeter</p>
@@ -17,6 +8,37 @@
     </div>
     <div class="actions">
       <span class="status-pill">LOCAL ONLY</span>
+      <div class="page-controls" aria-label="{{ t . "page_controls" }}">
+        <button
+          id="themeToggle"
+          class="theme-switch"
+          type="button"
+          aria-label="{{ t . "theme" }}"
+          data-theme-toggle
+        >
+          <span class="theme-icon theme-icon-dark" aria-hidden="true">◐</span>
+          <span class="theme-icon theme-icon-light" aria-hidden="true">☼</span>
+        </button>
+        <button
+          id="tokenDisplayToggle"
+          class="token-display-toggle"
+          type="button"
+          aria-label="{{ t . "token_display" }}"
+          data-token-mode-toggle
+          data-token-mode="compact"
+        >
+          {{ t . "token_compact" }}
+        </button>
+        <button
+          id="langToggle"
+          class="language-switch {{ if eq .Lang "zh-CN" }}is-zh{{ else }}is-en{{ end }}"
+          type="button"
+          aria-label="{{ t . "language" }}"
+          data-next-lang="{{ if eq .Lang "en" }}zh-CN{{ else }}en{{ end }}"
+        >
+          {{ if eq .Lang "en" }}<span>EN</span><strong>中文</strong>{{ else }}<strong>EN</strong><span>中文</span>{{ end }}
+        </button>
+      </div>
       <select id="grainSelect" aria-label="{{ t . "grain_label" }}">
         <option value="day" {{ if eq .Grain "day" }}selected{{ end }}>{{ t . "day" }}</option>
         <option value="week" {{ if eq .Grain "week" }}selected{{ end }}>{{ t . "week" }}</option>
@@ -29,27 +51,27 @@
   <section class="stats">
     <article>
       <span>{{ t . "total_tokens" }}</span>
-      <strong title="{{ format .Dashboard.Summary.TotalTokens }}">{{ compact .Dashboard.Summary.TotalTokens }}</strong>
+      <strong data-token-value="{{ .Dashboard.Summary.TotalTokens }}" title="{{ format .Dashboard.Summary.TotalTokens }}">{{ compact .Dashboard.Summary.TotalTokens }}</strong>
     </article>
     <article>
       <span>{{ t . "input_tokens" }}</span>
-      <strong title="{{ format .Dashboard.Summary.InputTokens }}">{{ compact .Dashboard.Summary.InputTokens }}</strong>
+      <strong data-token-value="{{ .Dashboard.Summary.InputTokens }}" title="{{ format .Dashboard.Summary.InputTokens }}">{{ compact .Dashboard.Summary.InputTokens }}</strong>
     </article>
     <article>
       <span>{{ t . "output_tokens" }}</span>
-      <strong title="{{ format .Dashboard.Summary.OutputTokens }}">{{ compact .Dashboard.Summary.OutputTokens }}</strong>
+      <strong data-token-value="{{ .Dashboard.Summary.OutputTokens }}" title="{{ format .Dashboard.Summary.OutputTokens }}">{{ compact .Dashboard.Summary.OutputTokens }}</strong>
     </article>
     <article>
       <span>{{ t . "cache_read" }}</span>
-      <strong title="{{ format .Dashboard.Summary.CacheReadTokens }}">{{ compact .Dashboard.Summary.CacheReadTokens }}</strong>
+      <strong data-token-value="{{ .Dashboard.Summary.CacheReadTokens }}" title="{{ format .Dashboard.Summary.CacheReadTokens }}">{{ compact .Dashboard.Summary.CacheReadTokens }}</strong>
     </article>
     <article>
       <span>{{ t . "cache_write" }}</span>
-      <strong title="{{ format .Dashboard.Summary.CacheWriteTokens }}">{{ compact .Dashboard.Summary.CacheWriteTokens }}</strong>
+      <strong data-token-value="{{ .Dashboard.Summary.CacheWriteTokens }}" title="{{ format .Dashboard.Summary.CacheWriteTokens }}">{{ compact .Dashboard.Summary.CacheWriteTokens }}</strong>
     </article>
     <article>
       <span>{{ t . "reasoning_tokens" }}</span>
-      <strong title="{{ format .Dashboard.Summary.ReasoningTokens }}">{{ compact .Dashboard.Summary.ReasoningTokens }}</strong>
+      <strong data-token-value="{{ .Dashboard.Summary.ReasoningTokens }}" title="{{ format .Dashboard.Summary.ReasoningTokens }}">{{ compact .Dashboard.Summary.ReasoningTokens }}</strong>
     </article>
     <article>
       <span>{{ t . "request_count" }}</span>
@@ -136,13 +158,13 @@
               <td>{{ .Period }}</td>
               <td>{{ .Tool }}</td>
               <td>{{ .Name }}</td>
-              <td>{{ format .InputTokens }}</td>
-              <td>{{ format .OutputTokens }}</td>
-              <td>{{ format .CacheReadTokens }}</td>
-              <td>{{ format .CacheWriteTokens }}</td>
-              <td>{{ format .ReasoningTokens }}</td>
-              <td>{{ format .ToolTokens }}</td>
-              <td>{{ format .TotalTokens }}</td>
+              <td data-token-value="{{ .InputTokens }}">{{ format .InputTokens }}</td>
+              <td data-token-value="{{ .OutputTokens }}">{{ format .OutputTokens }}</td>
+              <td data-token-value="{{ .CacheReadTokens }}">{{ format .CacheReadTokens }}</td>
+              <td data-token-value="{{ .CacheWriteTokens }}">{{ format .CacheWriteTokens }}</td>
+              <td data-token-value="{{ .ReasoningTokens }}">{{ format .ReasoningTokens }}</td>
+              <td data-token-value="{{ .ToolTokens }}">{{ format .ToolTokens }}</td>
+              <td data-token-value="{{ .TotalTokens }}">{{ format .TotalTokens }}</td>
               <td>${{ printf "%.3f" .EstUSD }}</td>
             </tr>
             {{ else }}
