@@ -6,6 +6,10 @@ This project follows semantic versioning for release tags.
 
 ## Unreleased
 
+- Standardized the Go module path for `go install github.com/why19970628/agentmeter@latest`.
+- Added `agentmeter doctor` for local data-source diagnostics.
+- Updated CI and release workflows to run `make validate`.
+- Added a macOS/Linux shell installer and Homebrew cask release configuration.
 - Added Web dark/light theme switching.
 - Added a global readable/raw token display toggle, defaulting to readable counts.
 - Moved Web display controls into the page header and added static asset versioning to avoid stale UI scripts.

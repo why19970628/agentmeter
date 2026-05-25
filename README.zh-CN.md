@@ -50,6 +50,26 @@ go run . summary -period all -group model -paths examples
 
 从 GitHub Releases 下载对应系统的压缩包，解压后运行 `agentmeter` 二进制文件。
 
+macOS/Linux shell installer：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/why19970628/agentmeter/main/scripts/install.sh | sh
+```
+
+安装指定版本或目录：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/why19970628/agentmeter/main/scripts/install.sh | AGENTMETER_VERSION=v0.1.3 sh
+curl -fsSL https://raw.githubusercontent.com/why19970628/agentmeter/main/scripts/install.sh | AGENTMETER_INSTALL_DIR="$HOME/.local/bin" sh
+```
+
+Homebrew 支持已预留 GoReleaser 配置。tap 仓库发布后可使用：
+
+```bash
+brew tap why19970628/agentmeter
+brew install --cask agentmeter
+```
+
 macOS/Linux：
 
 ```bash
@@ -64,12 +84,24 @@ Expand-Archive .\agentmeter_VERSION_windows_amd64.zip
 .\agentmeter_VERSION_windows_amd64\agentmeter.exe summary -period all -paths examples
 ```
 
-通过 Go 从源码目录安装：
+通过 Go 安装：
+
+```bash
+go install github.com/why19970628/agentmeter@latest
+```
+
+拉取项目用于本地开发：
 
 ```bash
 git clone https://github.com/why19970628/agentmeter.git
 cd agentmeter
 go install .
+```
+
+不安装，直接在源码目录运行：
+
+```bash
+make run ARGS="summary -period today -paths examples"
 ```
 
 查看命令帮助：
@@ -78,6 +110,7 @@ go install .
 agentmeter summary -help
 agentmeter serve -help
 agentmeter scan -help
+agentmeter doctor -help
 ```
 
 ## CLI 用法
@@ -134,6 +167,12 @@ go run . summary -period month -format markdown -group model -paths examples
 
 ```bash
 go run . scan -paths examples
+```
+
+诊断本地数据来源：
+
+```bash
+go run . doctor -paths ~/.codex,~/.claude,~/.cursor,~/.gemini
 ```
 
 启动 Web 仪表盘：

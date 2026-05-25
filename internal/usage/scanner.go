@@ -30,7 +30,7 @@ func ScanDir(root string, opts ScanOptions) ([]Event, error) {
 		if entry.IsDir() {
 			return nil
 		}
-		if !looksLikeUsageFile(path) {
+		if !LooksLikeUsageFile(path) {
 			return nil
 		}
 		info, err := entry.Info()
@@ -336,11 +336,6 @@ func cacheCreationTokensIn(record map[string]any, depth int) int64 {
 		}
 	}
 	return 0
-}
-
-func looksLikeUsageFile(path string) bool {
-	ext := strings.ToLower(filepath.Ext(path))
-	return ext == ".json" || ext == ".jsonl" || ext == ".log"
 }
 
 func inferToolFromPath(path string) string {

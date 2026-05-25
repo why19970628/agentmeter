@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"agentmeter/internal/usage"
+	"github.com/why19970628/agentmeter/internal/usage"
 )
 
 type Server struct {

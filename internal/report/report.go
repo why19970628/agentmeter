@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"agentmeter/internal/usage"
+	"github.com/why19970628/agentmeter/internal/usage"
 )
 
 type Options struct {
@@ -49,10 +49,11 @@ func FilterPeriod(events []usage.Event, period string, now time.Time) []usage.Ev
 }
 
 func Render(events []usage.Event, opts Options) string {
-	rows := BuildRows(events, opts.Group)
-	label := groupLabel(opts.Group)
+	group := NormalizeGroup([]string{opts.Group})
+	rows := BuildRows(events, group)
+	label := groupLabel(group)
 	if opts.Lang == "zh-CN" {
-		label = groupLabelZH(opts.Group)
+		label = groupLabelZH(group)
 		for i := range rows {
 			if rows[i].Source == "Total" {
 				rows[i].Source = "总计"
@@ -71,6 +72,7 @@ func Render(events []usage.Event, opts Options) string {
 }
 
 func BuildRows(events []usage.Event, group string) []Row {
+	group = NormalizeGroup([]string{group})
 	byGroup := map[string]*Row{}
 	for _, event := range events {
 		name := groupName(event, group)
@@ -188,27 +190,75 @@ func normalizedTotal(event usage.Event) int64 {
 }
 
 func groupLabel(group string) string {
-	if group == "model" {
+	group = NormalizeGroup([]string{group})
+	switch group {
+	case "model":
 		return "Model"
+	case "tool":
+		return "Tool"
+	case "tool,model":
+		return "Tool / Model"
+	default:
+		return "Source"
 	}
-	return "Source"
 }
 
 func groupLabelZH(group string) string {
-	if group == "model" {
+	group = NormalizeGroup([]string{group})
+	switch group {
+	case "model":
 		return "模型"
+	case "tool":
+		return "工具"
+	case "tool,model":
+		return "工具 / 模型"
+	default:
+		return "来源"
 	}
-	return "来源"
 }
 
 func groupName(event usage.Event, group string) string {
-	if group == "model" {
+	group = NormalizeGroup([]string{group})
+	switch group {
+	case "model":
 		if event.ModelName == "" {
 			return "unknown"
 		}
 		return event.ModelName
+	case "tool":
+		return displaySource(event.ToolName)
+	case "tool,model":
+		model := event.ModelName
+		if model == "" {
+			model = "unknown"
+		}
+		return displaySource(event.ToolName) + " / " + model
+	default:
+		return displaySource(event.ToolName)
 	}
-	return displaySource(event.ToolName)
+}
+
+func NormalizeGroup(values []string) string {
+	seen := map[string]bool{}
+	for _, value := range values {
+		for _, part := range strings.Split(value, ",") {
+			part = strings.TrimSpace(part)
+			switch part {
+			case "source", "tool", "model":
+				seen[part] = true
+			}
+		}
+	}
+	if seen["tool"] && seen["model"] {
+		return "tool,model"
+	}
+	if seen["model"] {
+		return "model"
+	}
+	if seen["tool"] {
+		return "tool"
+	}
+	return "source"
 }
 
 func periodStart(period string, now time.Time) time.Time {

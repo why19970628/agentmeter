@@ -6,6 +6,7 @@ GOMODCACHE ?= $(CURDIR)/.cache/go-mod
 
 check:
 	@test -z "$$(gofmt -l $$(find . -name '*.go' -not -path './.git/*'))"
+	sh -n scripts/install.sh
 	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) vet ./...
 
 test:

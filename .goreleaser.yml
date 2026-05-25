@@ -39,6 +39,7 @@ archives:
       - LICENSE
       - assets/*
       - examples/*
+      - scripts/*
       - templates/*
       - static/**/*
     format_overrides:
@@ -53,6 +54,26 @@ archives:
 
 checksum:
   name_template: checksums.txt
+
+homebrew_casks:
+  - name: agentmeter
+    ids:
+      - unix
+    repository:
+      owner: why19970628
+      name: homebrew-agentmeter
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/why19970628/agentmeter"
+    description: "Offline-first token usage tracker for local AI agent tools"
+    license: MIT
+    binaries:
+      - agentmeter
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/agentmeter"]
+          end
 
 snapshot:
   version_template: "{{ incpatch .Version }}-next"

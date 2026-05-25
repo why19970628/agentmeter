@@ -50,6 +50,26 @@ go run . summary -period all -group model -paths examples
 
 Download a release archive from GitHub Releases, then unpack and run the `agentmeter` binary.
 
+Shell installer for macOS/Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/why19970628/agentmeter/main/scripts/install.sh | sh
+```
+
+Install a specific version or target directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/why19970628/agentmeter/main/scripts/install.sh | AGENTMETER_VERSION=v0.1.3 sh
+curl -fsSL https://raw.githubusercontent.com/why19970628/agentmeter/main/scripts/install.sh | AGENTMETER_INSTALL_DIR="$HOME/.local/bin" sh
+```
+
+Homebrew support is wired for a tap release. Once the tap repository is published, install with:
+
+```bash
+brew tap why19970628/agentmeter
+brew install --cask agentmeter
+```
+
 macOS/Linux:
 
 ```bash
@@ -64,12 +84,24 @@ Expand-Archive .\agentmeter_VERSION_windows_amd64.zip
 .\agentmeter_VERSION_windows_amd64\agentmeter.exe summary -period all -paths examples
 ```
 
-Install from a source checkout with Go:
+Go install:
+
+```bash
+go install github.com/why19970628/agentmeter@latest
+```
+
+Pull the project for local development:
 
 ```bash
 git clone https://github.com/why19970628/agentmeter.git
 cd agentmeter
 go install .
+```
+
+Run from a checkout without installing:
+
+```bash
+make run ARGS="summary -period today -paths examples"
 ```
 
 Show command help:
@@ -78,6 +110,7 @@ Show command help:
 agentmeter summary -help
 agentmeter serve -help
 agentmeter scan -help
+agentmeter doctor -help
 ```
 
 ## CLI Usage
@@ -134,6 +167,12 @@ Scan-only summary:
 
 ```bash
 go run . scan -paths examples
+```
+
+Diagnose local data sources:
+
+```bash
+go run . doctor -paths ~/.codex,~/.claude,~/.cursor,~/.gemini
 ```
 
 Start the Web dashboard:

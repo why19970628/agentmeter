@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmeter/internal/usage"
+	"github.com/why19970628/agentmeter/internal/usage"
 )
 
 func TestFilterPeriodTodayUsesLocalDay(t *testing.T) {
@@ -63,6 +63,64 @@ func TestRenderTableCanGroupByModel(t *testing.T) {
 	}
 	if strings.Contains(got, "Codex") {
 		t.Fatalf("model grouped output should not use source names:\n%s", got)
+	}
+}
+
+func TestRenderTableCanGroupByTool(t *testing.T) {
+	events := []usage.Event{
+		{ToolName: "codex", ModelName: "gpt-5", InputTokens: 1000, OutputTokens: 500, TotalTokens: 1500},
+		{ToolName: "codex", ModelName: "gpt-5.5", InputTokens: 2000, OutputTokens: 1000, TotalTokens: 3000},
+		{ToolName: "cursor", ModelName: "claude-sonnet-4", InputTokens: 300, OutputTokens: 200, TotalTokens: 500},
+	}
+
+	got := Render(events, Options{Format: "table", Group: "tool"})
+
+	header := strings.Fields(strings.SplitN(got, "\n", 2)[0])
+	if len(header) == 0 || header[0] != "Tool" {
+		t.Fatalf("tool grouped table first header = %q, want Tool:\n%s", header, got)
+	}
+	for _, want := range []string{"Codex", "Cursor", "4,500", "Total"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("tool table output missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "gpt-5") || strings.Contains(got, "claude-sonnet-4") {
+		t.Fatalf("tool grouped output should not use model names:\n%s", got)
+	}
+}
+
+func TestRenderTableCanGroupByToolAndModel(t *testing.T) {
+	events := []usage.Event{
+		{ToolName: "codex", ModelName: "gpt-5", InputTokens: 1000, OutputTokens: 500, TotalTokens: 1500},
+		{ToolName: "codex", ModelName: "gpt-5.5", InputTokens: 2000, OutputTokens: 1000, TotalTokens: 3000},
+		{ToolName: "cursor", ModelName: "gpt-5", InputTokens: 300, OutputTokens: 200, TotalTokens: 500},
+	}
+
+	got := Render(events, Options{Format: "table", Group: "tool,model"})
+
+	headerLine := strings.SplitN(got, "\n", 2)[0]
+	if !strings.HasPrefix(headerLine, "Tool / Model") {
+		t.Fatalf("tool+model grouped header = %q, want Tool / Model", headerLine)
+	}
+	for _, want := range []string{"Codex / gpt-5", "Codex / gpt-5.5", "Cursor / gpt-5", "Total"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("tool+model table output missing %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestNormalizeGroupSupportsRepeatedAndCommaSeparatedGroups(t *testing.T) {
+	got := NormalizeGroup([]string{"tool", "model"})
+	if got != "tool,model" {
+		t.Fatalf("NormalizeGroup repeated = %q, want tool,model", got)
+	}
+	got = NormalizeGroup([]string{"tool,model"})
+	if got != "tool,model" {
+		t.Fatalf("NormalizeGroup comma separated = %q, want tool,model", got)
+	}
+	got = NormalizeGroup([]string{"model", "tool", "model"})
+	if got != "tool,model" {
+		t.Fatalf("NormalizeGroup should dedupe and keep canonical order = %q", got)
 	}
 }
 

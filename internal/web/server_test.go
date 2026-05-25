@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"agentmeter/internal/usage"
+	"github.com/why19970628/agentmeter/internal/usage"
 )
 
 func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
