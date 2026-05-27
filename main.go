@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -69,7 +70,11 @@ func serve(args []string) {
 	_ = fs.Parse(args)
 
 	events := usage.ScanPaths(*paths, usage.ScanOptions{})
-	server, err := web.NewServer(events, "templates", "static")
+	templateDir, staticDir, ok := resolveWebAssets(defaultWebAssetCandidates())
+	if !ok {
+		log.Fatal("cannot find AgentMeter web assets; set AGENTMETER_ASSET_DIR to the directory containing templates and static")
+	}
+	server, err := web.NewServer(events, templateDir, staticDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,4 +103,51 @@ func runDoctor(args []string) {
 	_ = fs.Parse(args)
 
 	fmt.Print(doctor.Report(doctor.Options{Paths: *paths}))
+}
+
+func defaultWebAssetCandidates() []string {
+	candidates := []string{}
+	if env := strings.TrimSpace(os.Getenv("AGENTMETER_ASSET_DIR")); env != "" {
+		candidates = append(candidates, env)
+	}
+	candidates = append(candidates, ".")
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		candidates = append(candidates,
+			exeDir,
+			filepath.Join(exeDir, ".."),
+			filepath.Join(exeDir, "..", "share", "agentmeter"),
+			filepath.Join(exeDir, "..", "share", "agentmeter", "libexec", "agentmeter"),
+		)
+	}
+	candidates = append(candidates,
+		"/usr/local/share/agentmeter",
+		"/opt/homebrew/share/agentmeter",
+	)
+	return candidates
+}
+
+func resolveWebAssets(candidates []string) (string, string, bool) {
+	for _, candidate := range candidates {
+		root := usage.ExpandHome(strings.TrimSpace(candidate))
+		if root == "" {
+			continue
+		}
+		templateDir := filepath.Join(root, "templates")
+		staticDir := filepath.Join(root, "static")
+		if fileExists(filepath.Join(templateDir, "layout.html")) && dirExists(staticDir) {
+			return templateDir, staticDir, true
+		}
+	}
+	return "", "", false
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
+}
+
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }
