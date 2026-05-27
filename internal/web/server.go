@@ -2,10 +2,12 @@ package web
 
 import (
 	"bytes"
+	"embed"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -15,10 +17,13 @@ import (
 	"github.com/why19970628/agentmeter/internal/usage"
 )
 
+//go:embed assets/templates/*.html assets/static/css/*.css assets/static/js/*.js
+var embeddedAssets embed.FS
+
 type Server struct {
 	events    []usage.Event
 	templates *template.Template
-	staticDir string
+	staticFS  http.FileSystem
 }
 
 type PageData struct {
@@ -52,6 +57,11 @@ func NewServer(events []usage.Event, templateDir string, staticDir string) (*Ser
 		"compact": formatCompact,
 		"t":       func(data PageData, key string) string { return translate(data.Lang, key) },
 	}
+
+	if templateDir == "" || staticDir == "" {
+		return NewEmbeddedServer(events)
+	}
+
 	tmpl, err := template.New("layout.html").Funcs(funcs).ParseFiles(
 		filepath.Join(templateDir, "layout.html"),
 		filepath.Join(templateDir, "index.html"),
@@ -59,7 +69,29 @@ func NewServer(events []usage.Event, templateDir string, staticDir string) (*Ser
 	if err != nil {
 		return nil, err
 	}
-	return &Server{events: events, templates: tmpl, staticDir: staticDir}, nil
+	return &Server{events: events, templates: tmpl, staticFS: http.Dir(staticDir)}, nil
+}
+
+func NewEmbeddedServer(events []usage.Event) (*Server, error) {
+	funcs := template.FuncMap{
+		"json":    templateJSON,
+		"format":  formatInt,
+		"compact": formatCompact,
+		"t":       func(data PageData, key string) string { return translate(data.Lang, key) },
+	}
+	tmpl, err := template.New("layout.html").Funcs(funcs).ParseFS(
+		embeddedAssets,
+		"assets/templates/layout.html",
+		"assets/templates/index.html",
+	)
+	if err != nil {
+		return nil, err
+	}
+	staticFS, err := fs.Sub(embeddedAssets, "assets/static")
+	if err != nil {
+		return nil, err
+	}
+	return &Server{events: events, templates: tmpl, staticFS: http.FS(staticFS)}, nil
 }
 
 func templateJSON(value any) template.JS {
@@ -111,7 +143,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/", s.index)
 	mux.HandleFunc("/api/dashboard", s.dashboard)
 	mux.HandleFunc("/export.csv", s.exportCSV)
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticDir))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(s.staticFS)))
 	return mux
 }
 

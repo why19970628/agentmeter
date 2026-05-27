@@ -72,7 +72,7 @@ func serve(args []string) {
 	events := usage.ScanPaths(*paths, usage.ScanOptions{})
 	templateDir, staticDir, ok := resolveWebAssets(defaultWebAssetCandidates())
 	if !ok {
-		log.Fatal("cannot find AgentMeter web assets; set AGENTMETER_ASSET_DIR to the directory containing templates and static")
+		log.Print("AgentMeter web assets not found on disk; using embedded assets")
 	}
 	server, err := web.NewServer(events, templateDir, staticDir)
 	if err != nil {

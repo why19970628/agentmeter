@@ -1,0 +1,15 @@
+{{ define "layout.html" }}
+<!doctype html>
+<html lang="{{ t . "html_lang" }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgentMeter</title>
+  <link rel="stylesheet" href="/static/css/app.css?v=20260525">
+</head>
+<body>
+  {{ template "content" . }}
+  <script src="/static/js/app.js?v=20260525"></script>
+</body>
+</html>
+{{ end }}

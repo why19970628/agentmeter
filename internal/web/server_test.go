@@ -69,6 +69,39 @@ func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
 	}
 }
 
+func TestEmbeddedServerRendersIndexAndStaticAssets(t *testing.T) {
+	server, err := NewEmbeddedServer([]usage.Event{
+		{
+			ToolName:    "codex",
+			ModelName:   "gpt-5",
+			InputTokens: 100,
+			TotalTokens: 100,
+			OccurredAt:  time.Date(2026, 5, 1, 10, 0, 0, 0, time.UTC),
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	indexResp := httptest.NewRecorder()
+	server.Routes().ServeHTTP(indexResp, httptest.NewRequest(http.MethodGet, "/", nil))
+	if indexResp.Code != http.StatusOK {
+		t.Fatalf("index status = %d, want 200", indexResp.Code)
+	}
+	if !strings.Contains(indexResp.Body.String(), "AgentMeter") {
+		t.Fatalf("index body does not contain AgentMeter")
+	}
+
+	staticResp := httptest.NewRecorder()
+	server.Routes().ServeHTTP(staticResp, httptest.NewRequest(http.MethodGet, "/static/css/app.css", nil))
+	if staticResp.Code != http.StatusOK {
+		t.Fatalf("static status = %d, want 200", staticResp.Code)
+	}
+	if !strings.Contains(staticResp.Body.String(), "--bg:") {
+		t.Fatalf("embedded static asset was not served")
+	}
+}
+
 func TestIndexModelTableAlwaysShowsDailyModelRows(t *testing.T) {
 	root := filepath.Join("..", "..")
 	server, err := NewServer([]usage.Event{
