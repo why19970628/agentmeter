@@ -12,6 +12,14 @@ import (
 	"github.com/why19970628/agentmeter/internal/usage"
 )
 
+func TestMain(m *testing.M) {
+	old := time.Local
+	time.Local = time.UTC
+	code := m.Run()
+	time.Local = old
+	os.Exit(code)
+}
+
 func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
 	root := filepath.Join("..", "..")
 	server, err := NewServer([]usage.Event{
@@ -51,6 +59,14 @@ func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
 		if !strings.Contains(indexResp.Body.String(), want) {
 			t.Fatalf("index body does not contain model usage table fragment %q", want)
 		}
+	}
+	for _, want := range []string{"Cost estimate", "Codex", "0.10", "Local estimate"} {
+		if !strings.Contains(indexResp.Body.String(), want) {
+			t.Fatalf("index body does not contain pricing formula fragment %q", want)
+		}
+	}
+	if !strings.Contains(indexResp.Body.String(), `class="estimate-tip"`) || strings.Contains(indexResp.Body.String(), `class="pricing-note"`) || strings.Contains(indexResp.Body.String(), `class="pricing-popover"`) {
+		t.Fatalf("pricing formula should render as a compact table header tooltip")
 	}
 	for _, want := range []string{"Cache Read", "Cache Write", "Reasoning Tokens", "Tool Tokens"} {
 		if !strings.Contains(indexResp.Body.String(), want) {
@@ -133,6 +149,32 @@ func TestIndexModelTableAlwaysShowsDailyModelRows(t *testing.T) {
 	}
 	if strings.Index(monthResp.Body.String(), ">2026-05-02<") > strings.Index(monthResp.Body.String(), ">2026-05-01<") {
 		t.Fatalf("model table should show latest day first:\n%s", monthResp.Body.String())
+	}
+}
+
+func TestIndexModelTableUsesCodexBillableEstimate(t *testing.T) {
+	root := filepath.Join("..", "..")
+	server, err := NewServer([]usage.Event{
+		{
+			ToolName:        "codex",
+			ModelName:       "gpt-5.5",
+			InputTokens:     128_415_423,
+			OutputTokens:    302_708,
+			CacheReadTokens: 124_555_776,
+			TotalTokens:     128_718_131,
+			OccurredAt:      time.Date(2026, 5, 27, 14, 4, 30, 0, time.UTC),
+		},
+	}, filepath.Join(root, "templates"), filepath.Join(root, "static"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := httptest.NewRecorder()
+	server.Routes().ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/", nil))
+	body := resp.Body.String()
+
+	if !strings.Contains(body, ">2026-05-27<") || !strings.Contains(body, "$65.116") {
+		t.Fatalf("codex model row should use billable estimate near $65:\n%s", body)
 	}
 }
 
@@ -302,7 +344,7 @@ func TestIndexSupportsChineseLanguage(t *testing.T) {
 	server.Routes().ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/?lang=zh-CN", nil))
 	body := resp.Body.String()
 
-	if !strings.Contains(body, "本地 Agent 用量统计") || !strings.Contains(body, "每日 API 请求次数") || !strings.Contains(body, "<th>工具</th>") {
+	if !strings.Contains(body, "本地 Agent 用量统计") || !strings.Contains(body, "每日 API 请求次数") || !strings.Contains(body, "<th>工具</th>") || !strings.Contains(body, "费用估算") {
 		t.Fatalf("chinese page missing translated labels:\n%s", body)
 	}
 	if !strings.Contains(body, `class="language-switch`) || !strings.Contains(body, `data-next-lang="en"`) {

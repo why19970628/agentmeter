@@ -120,14 +120,15 @@ func sortedRanking(items map[string]*RankingItem) []RankingItem {
 }
 
 func bucketKey(t time.Time, grain Grain) string {
+	local := t.In(time.Local)
 	switch grain {
 	case GrainWeek:
-		year, week := t.ISOWeek()
+		year, week := local.ISOWeek()
 		return fmt.Sprintf("%04d-W%02d", year, week)
 	case GrainMonth:
-		return t.Format("2006-01")
+		return local.Format("2006-01")
 	default:
-		return t.Format("2006-01-02")
+		return local.Format("2006-01-02")
 	}
 }
 

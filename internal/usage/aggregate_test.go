@@ -5,7 +5,18 @@ import (
 	"time"
 )
 
+func setTimeLocal(loc *time.Location) func() {
+	old := time.Local
+	time.Local = loc
+	return func() {
+		time.Local = old
+	}
+}
+
 func TestBuildDashboardAggregatesByDayAndRanksTools(t *testing.T) {
+	restore := setTimeLocal(time.UTC)
+	defer restore()
+
 	events := []Event{
 		{
 			ToolName: "codex", ModelName: "gpt-5", ProjectPath: "/work/a",

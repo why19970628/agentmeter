@@ -47,6 +47,10 @@ var labels = map[Lang]map[string]string{
 		"unresolved":       "未解析",
 		"tool_tokens":      "工具 Tokens",
 		"est_usd":          "预估费用(USD)",
+		"pricing_title":    "费用估算",
+		"pricing_api":      "API：非缓存输入按输入价，缓存读取按缓存价，输出/推理/工具 tokens 按输出价。",
+		"pricing_codex":    "Codex：按当天同模型累计快照取最大值；费用约为 (输入×5 + 输出×30) / 1M × 0.10。",
+		"pricing_note":     "本地估算，非官方账单。",
 		"empty_models":     "暂无模型用量数据",
 	},
 	LangEN: {
@@ -88,6 +92,10 @@ var labels = map[Lang]map[string]string{
 		"unresolved":       "Unresolved",
 		"tool_tokens":      "Tool Tokens",
 		"est_usd":          "Est. USD",
+		"pricing_title":    "Cost estimate",
+		"pricing_api":      "API: non-cached input uses input rates, cache read uses cached rates, output/reasoning/tool tokens use output rates.",
+		"pricing_codex":    "Codex: keeps the largest same-day cumulative snapshot; cost is roughly (input×5 + output×30) / 1M × 0.10.",
+		"pricing_note":     "Local estimate, not an official bill.",
 		"empty_models":     "No model usage data",
 	},
 }

@@ -5,9 +5,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AgentMeter</title>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem("agentmeter-theme") === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = theme;
+      } catch (_) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/static/css/app.css?v=20260525">
 </head>
-<body>
+<body data-theme="dark">
   {{ template "content" . }}
   <script src="/static/js/app.js?v=20260525"></script>
 </body>

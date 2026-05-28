@@ -41,6 +41,7 @@ function saveTheme(theme) {
 
 function applyTheme(theme) {
   const nextTheme = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = nextTheme;
   document.body.dataset.theme = nextTheme;
   const toggle = document.querySelector("#themeToggle");
   if (toggle) {

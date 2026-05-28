@@ -36,6 +36,7 @@
   --table-total: rgba(142, 255, 205, 0.05);
 }
 
+:root[data-theme="light"],
 body[data-theme="light"] {
   --bg: #f6f8fb;
   --panel: rgba(255, 255, 255, 0.86);
@@ -80,7 +81,7 @@ body {
   color: var(--ink);
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--body-bg);
-  transition: color 180ms ease, background 180ms ease;
+  transition: color 180ms ease;
 }
 
 body::before {
@@ -93,6 +94,21 @@ body::before {
     linear-gradient(90deg, var(--grid-line-b) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 74%);
+}
+
+.panel,
+.stat-card,
+select,
+.export,
+.status-pill,
+.token-display-toggle,
+.theme-switch,
+.language-switch {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .page {
@@ -670,6 +686,65 @@ body[data-theme="light"] .theme-icon-light {
   background: var(--table-total);
 }
 
+.estimate-head {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.estimate-tip {
+  width: 17px;
+  height: 17px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  color: var(--switch-ink);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--green), var(--blue-soft));
+  cursor: help;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1;
+  outline: none;
+}
+
+.estimate-tip-body {
+  width: min(420px, calc(100vw - 32px));
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 30;
+  display: none;
+  padding: 12px 13px;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  font-weight: 520;
+  line-height: 1.48;
+  text-align: left;
+  white-space: normal;
+}
+
+.estimate-tip:hover .estimate-tip-body,
+.estimate-tip:focus-visible .estimate-tip-body {
+  display: grid;
+  gap: 6px;
+}
+
+.estimate-tip-body strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.estimate-tip-body em {
+  color: var(--muted);
+  font-style: normal;
+}
+
 .empty-cell,
 .empty {
   color: var(--muted);
@@ -718,4 +793,5 @@ body[data-theme="light"] .theme-icon-light {
     max-width: none;
     flex: 1 1 150px;
   }
+
 }

@@ -168,7 +168,7 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 func modelRows(events []usage.Event, unresolved string) []UsageRow {
 	byModel := map[string]*UsageRow{}
 	for _, event := range events {
-		period := event.OccurredAt.Format("2006-01-02")
+		period := event.OccurredAt.In(time.Local).Format("2006-01-02")
 		model := event.ModelName
 		if model == "" {
 			model = unresolved

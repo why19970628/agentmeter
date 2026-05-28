@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestScanDirParsesJSONLUsageRecords(t *testing.T) {
@@ -143,6 +144,36 @@ func TestScanDirCarriesLaterModelContextWithinJSONLFile(t *testing.T) {
 	}
 	if events[0].ModelName != "gpt-5.5" {
 		t.Fatalf("event model = %q, want gpt-5.5", events[0].ModelName)
+	}
+}
+
+func TestNormalizeCumulativeEventsKeepsCodexSessionDailyMaxSnapshot(t *testing.T) {
+	restore := setTimeLocal(time.UTC)
+	defer restore()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "codex.jsonl")
+	body := `{"tool":"codex","session_id":"s1","model":"gpt-5.5","usage":{"input_tokens":1000,"output_tokens":100,"cache_read_input_tokens":800},"timestamp":"2026-05-27T10:00:00Z"}` + "\n" +
+		`{"tool":"codex","session_id":"s1","model":"gpt-5.5","usage":{"input_tokens":1200,"output_tokens":130,"cache_read_input_tokens":900},"timestamp":"2026-05-27T10:01:00Z"}` + "\n" +
+		`{"tool":"codex","session_id":"s1","model":"gpt-5.5","usage":{"input_tokens":1190,"output_tokens":120,"cache_read_input_tokens":880},"timestamp":"2026-05-27T10:02:00Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	events, err := ScanDir(dir, ScanOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	events = NormalizeCumulativeEvents(events)
+
+	if len(events) != 1 {
+		t.Fatalf("events len = %d, want 1", len(events))
+	}
+	gotInput := events[0].InputTokens
+	gotOutput := events[0].OutputTokens
+	gotCache := events[0].CacheReadTokens
+	if gotInput != 1200 || gotOutput != 130 || gotCache != 900 {
+		t.Fatalf("delta totals input/output/cache = %d/%d/%d, want 1200/130/900", gotInput, gotOutput, gotCache)
 	}
 }
 

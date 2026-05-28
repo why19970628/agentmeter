@@ -137,7 +137,19 @@
               <th>{{ t . "reasoning_tokens" }}</th>
               <th>{{ t . "tool_tokens" }}</th>
               <th>{{ t . "total_tokens" }}</th>
-              <th>{{ t . "est_usd" }}</th>
+              <th>
+                <span class="estimate-head">
+                  {{ t . "est_usd" }}
+                  <span class="estimate-tip" tabindex="0" aria-label="{{ t . "pricing_title" }}">?
+                    <span class="estimate-tip-body" role="tooltip">
+                      <strong>{{ t . "pricing_title" }}</strong>
+                      <span>{{ t . "pricing_api" }}</span>
+                      <span>{{ t . "pricing_codex" }}</span>
+                      <em>{{ t . "pricing_note" }}</em>
+                    </span>
+                  </span>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>

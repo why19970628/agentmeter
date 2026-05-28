@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -352,6 +353,52 @@ func inferToolFromPath(path string) string {
 	default:
 		return "local-agent"
 	}
+}
+
+func NormalizeCumulativeEvents(events []Event) []Event {
+	sort.SliceStable(events, func(i, j int) bool {
+		return events[i].OccurredAt.Before(events[j].OccurredAt)
+	})
+
+	codexMax := map[string]Event{}
+	out := make([]Event, 0, len(events))
+	for _, event := range events {
+		key := cumulativeKey(event)
+		if key == "" {
+			out = append(out, event)
+			continue
+		}
+
+		if existing, ok := codexMax[key]; !ok || snapshotTotal(event) > snapshotTotal(existing) {
+			codexMax[key] = event
+		}
+	}
+	for _, event := range codexMax {
+		out = append(out, event)
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].OccurredAt.Before(out[j].OccurredAt)
+	})
+	return out
+}
+
+func cumulativeKey(event Event) string {
+	if strings.ToLower(strings.TrimSpace(event.ToolName)) != "codex" {
+		return ""
+	}
+	session := strings.TrimSpace(event.SessionID)
+	if session == "" {
+		session = "daily"
+	}
+	day := event.OccurredAt.In(time.Local).Format("2006-01-02")
+	return "codex" + "\x00" + session + "\x00" + event.ModelName + "\x00" + day
+}
+
+func snapshotTotal(event Event) int64 {
+	if event.TotalTokens > 0 {
+		return event.TotalTokens
+	}
+	return event.InputTokens + event.OutputTokens + event.CacheWriteTokens + event.ReasoningTokens + event.ToolTokens
 }
 
 func objectAt(record map[string]any, key string) map[string]any {

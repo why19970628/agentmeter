@@ -49,7 +49,7 @@ func ScanPaths(raw string, opts ScanOptions) []Event {
 		}
 		events = append(events, found...)
 	}
-	return events
+	return NormalizeCumulativeEvents(events)
 }
 
 func SplitPaths(raw string) []string {
