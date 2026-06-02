@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -16,29 +17,65 @@ import (
 	"github.com/why19970628/agentmeter/internal/web"
 )
 
-func main() {
-	if len(os.Args) < 2 {
-		serve(os.Args[1:])
-		return
-	}
+var version = "dev"
 
-	switch os.Args[1] {
-	case "summary":
-		summary(os.Args[2:])
-	case "serve":
-		serve(os.Args[2:])
-	case "scan":
-		scan(os.Args[2:])
-	case "doctor":
-		runDoctor(os.Args[2:])
-	default:
-		fmt.Fprintf(os.Stderr, "unknown command: %s\n", os.Args[1])
-		os.Exit(2)
-	}
+func main() {
+	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
-func summary(args []string) {
+func run(args []string, stdout io.Writer, stderr io.Writer) int {
+	if len(args) == 0 {
+		serve([]string{}, stdout, stderr)
+		return 0
+	}
+
+	switch args[0] {
+	case "-h", "--help", "help":
+		printHelp(stdout)
+	case "-v", "--version", "version":
+		fmt.Fprintf(stdout, "agentmeter %s\n", version)
+	case "summary":
+		summary(args[1:], stdout, stderr)
+	case "serve":
+		serve(args[1:], stdout, stderr)
+	case "scan":
+		scan(args[1:], stdout, stderr)
+	case "doctor":
+		runDoctor(args[1:], stdout, stderr)
+	default:
+		fmt.Fprintf(stderr, "unknown command: %s\n\n", args[0])
+		printHelp(stderr)
+		return 2
+	}
+	return 0
+}
+
+func printHelp(w io.Writer) {
+	fmt.Fprint(w, `AgentMeter - offline-first local AI agent usage tracker
+
+Usage:
+  agentmeter [command] [flags]
+
+Commands:
+  serve     Start the web dashboard (default)
+  summary   Print usage summary
+  scan      Scan local usage logs and print counters
+  doctor    Check configured usage paths
+
+Flags:
+  -h, --help      Show help
+  -v, --version   Show version
+
+Examples:
+  agentmeter serve
+  agentmeter summary -period all -group tool -group model
+  agentmeter scan -paths ~/.codex,~/.claude
+`)
+}
+
+func summary(args []string, stdout io.Writer, stderr io.Writer) {
 	fs := flag.NewFlagSet("summary", flag.ExitOnError)
+	fs.SetOutput(stderr)
 	paths := fs.String("paths", usage.DefaultPaths(), "comma-separated local log directories")
 	period := fs.String("period", "month", "period: today, week, month, all")
 	format := fs.String("format", "table", "format: table, json, markdown")
@@ -49,7 +86,7 @@ func summary(args []string) {
 
 	events := usage.ScanPaths(*paths, usage.ScanOptions{})
 	events = report.FilterPeriod(events, *period, time.Now())
-	fmt.Print(report.Render(events, report.Options{Format: *format, Group: report.NormalizeGroup(groups), Lang: *lang}))
+	fmt.Fprint(stdout, report.Render(events, report.Options{Format: *format, Group: report.NormalizeGroup(groups), Lang: *lang}))
 }
 
 type multiFlag []string
@@ -63,8 +100,9 @@ func (m *multiFlag) Set(value string) error {
 	return nil
 }
 
-func serve(args []string) {
+func serve(args []string, stdout io.Writer, stderr io.Writer) {
 	fs := flag.NewFlagSet("serve", flag.ExitOnError)
+	fs.SetOutput(stderr)
 	addr := fs.String("addr", "127.0.0.1:8787", "listen address")
 	paths := fs.String("paths", usage.DefaultPaths(), "comma-separated local log directories")
 	_ = fs.Parse(args)
@@ -84,25 +122,27 @@ func serve(args []string) {
 	log.Fatal(http.ListenAndServe(*addr, server.Routes()))
 }
 
-func scan(args []string) {
+func scan(args []string, stdout io.Writer, stderr io.Writer) {
 	fs := flag.NewFlagSet("scan", flag.ExitOnError)
+	fs.SetOutput(stderr)
 	paths := fs.String("paths", usage.DefaultPaths(), "comma-separated local log directories")
 	_ = fs.Parse(args)
 
 	events := usage.ScanPaths(*paths, usage.ScanOptions{})
 	dashboard := usage.BuildDashboard(events, usage.GrainDay)
-	fmt.Printf("events: %d\n", len(events))
-	fmt.Printf("tools: %d\n", dashboard.Summary.ToolCount)
-	fmt.Printf("models: %d\n", dashboard.Summary.ModelCount)
-	fmt.Printf("tokens: %d\n", dashboard.Summary.TotalTokens)
+	fmt.Fprintf(stdout, "events: %d\n", len(events))
+	fmt.Fprintf(stdout, "tools: %d\n", dashboard.Summary.ToolCount)
+	fmt.Fprintf(stdout, "models: %d\n", dashboard.Summary.ModelCount)
+	fmt.Fprintf(stdout, "tokens: %d\n", dashboard.Summary.TotalTokens)
 }
 
-func runDoctor(args []string) {
+func runDoctor(args []string, stdout io.Writer, stderr io.Writer) {
 	fs := flag.NewFlagSet("doctor", flag.ExitOnError)
+	fs.SetOutput(stderr)
 	paths := fs.String("paths", usage.DefaultPaths(), "comma-separated local log directories")
 	_ = fs.Parse(args)
 
-	fmt.Print(doctor.Report(doctor.Options{Paths: *paths}))
+	fmt.Fprint(stdout, doctor.Report(doctor.Options{Paths: *paths}))
 }
 
 func defaultWebAssetCandidates() []string {

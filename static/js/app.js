@@ -9,6 +9,11 @@ const text = {
     noRequests: "No daily request data",
     requestSuffix: "requests",
     requestChartLabel: "Daily API request count line chart",
+    total: "Total",
+    input: "Input",
+    output: "Output",
+    cacheRead: "Cache",
+    cost: "Est. USD",
     tokenCompact: "Readable",
     tokenRaw: "Raw",
   },
@@ -18,6 +23,11 @@ const text = {
     noRequests: "暂无每日请求数据",
     requestSuffix: "次请求",
     requestChartLabel: "每日 API 请求次数折线图",
+    total: "总量",
+    input: "输入",
+    output: "输出",
+    cacheRead: "缓存",
+    cost: "预估费用(USD)",
     tokenCompact: "友好数量",
     tokenRaw: "原始数量",
   },
@@ -248,7 +258,6 @@ function recalculateModelTotal(rows, totalRow) {
     cacheReadTokens: 0,
     cacheWriteTokens: 0,
     reasoningTokens: 0,
-    toolTokens: 0,
     totalTokens: 0,
     estUsd: 0,
   };
@@ -258,28 +267,26 @@ function recalculateModelTotal(rows, totalRow) {
     totals.cacheReadTokens += parseNumber(row.dataset.cacheReadTokens);
     totals.cacheWriteTokens += parseNumber(row.dataset.cacheWriteTokens);
     totals.reasoningTokens += parseNumber(row.dataset.reasoningTokens);
-    totals.toolTokens += parseNumber(row.dataset.toolTokens);
     totals.totalTokens += parseNumber(row.dataset.totalTokens);
     totals.estUsd += parseNumber(row.dataset.estUsd);
   }
 
   const cells = totalRow.children;
-  if (cells.length < 11) return;
+  if (cells.length < 10) return;
   const tokenTotals = [
     totals.inputTokens,
     totals.outputTokens,
     totals.cacheReadTokens,
     totals.cacheWriteTokens,
     totals.reasoningTokens,
-    totals.toolTokens,
     totals.totalTokens,
   ];
   tokenTotals.forEach((value, index) => {
-    const cell = cells[index + 3];
+    const cell = cells[index + 4];
     cell.dataset.tokenValue = String(value);
     cell.title = formatNumber(value);
   });
-  cells[10].textContent = `$${totals.estUsd.toFixed(3)}`;
+  cells[3].textContent = `$${totals.estUsd.toFixed(3)}`;
   applyTokenDisplayMode(currentTokenDisplayMode());
 }
 

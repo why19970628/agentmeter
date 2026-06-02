@@ -55,6 +55,43 @@ func TestEstimateCostUsesCodexBillableEstimate(t *testing.T) {
 	}
 }
 
+func TestEstimateCostMatchesBreakdownTotal(t *testing.T) {
+	event := Event{
+		ToolName:        "codex",
+		ModelName:       "gpt-5.5",
+		InputTokens:     173_670_501,
+		OutputTokens:    382_602,
+		CacheReadTokens: 168_433_664,
+	}
+
+	cost := EstimateCost(event)
+	breakdown := EstimateCostBreakdown(event)
+
+	if math.Abs(cost-breakdown.Total) > 0.0001 {
+		t.Fatalf("cost = %.3f, breakdown total = %.3f", cost, breakdown.Total)
+	}
+	if math.Abs(cost-87.983) > 0.01 {
+		t.Fatalf("codex cost = %.3f, want today's known estimate around 87.983", cost)
+	}
+}
+
+func TestEstimateCostUsesCodexCacheReadAsInputSideUsage(t *testing.T) {
+	event := Event{
+		ToolName:        "codex",
+		ModelName:       "gpt-5.5",
+		InputTokens:     113_000,
+		OutputTokens:    391_300,
+		CacheReadTokens: 171_100_000,
+		TotalTokens:     176_800_000,
+	}
+
+	got := EstimateCost(event)
+
+	if math.Abs(got-86.723) > 0.01 {
+		t.Fatalf("codex cost = %.3f, want cache read used as input-side estimate around 86.723", got)
+	}
+}
+
 func TestEstimateCostUsesClaudeCacheRates(t *testing.T) {
 	event := Event{
 		ModelName:        "claude-sonnet-4",

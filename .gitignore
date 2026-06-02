@@ -3,3 +3,4 @@
 /.cache
 /bin
 /dist
+/webui/node_modules

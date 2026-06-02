@@ -21,6 +21,7 @@ func BuildDashboard(events []Event, grain Grain) Dashboard {
 
 	for _, event := range events {
 		total := normalizedTotal(event)
+		cost := EstimateCost(event)
 
 		summary.InputTokens += event.InputTokens
 		summary.OutputTokens += event.OutputTokens
@@ -30,7 +31,7 @@ func BuildDashboard(events []Event, grain Grain) Dashboard {
 		summary.ToolTokens += event.ToolTokens
 		summary.TotalTokens += total
 		summary.RequestCount++
-		summary.CostAmount += event.CostAmount
+		summary.CostAmount += cost
 
 		if event.ModelName != "" {
 			models[event.ModelName] = struct{}{}
@@ -39,10 +40,10 @@ func BuildDashboard(events []Event, grain Grain) Dashboard {
 			tools[event.ToolName] = struct{}{}
 		}
 
-		addBucket(buckets, bucketKey(event.OccurredAt, grain), event, total)
-		addRanking(toolRank, emptyAs(event.ToolName, "unknown"), event, total)
-		addRanking(modelRank, emptyAs(event.ModelName, "unknown"), event, total)
-		addRanking(projectRank, emptyAs(event.ProjectPath, "unknown"), event, total)
+		addBucket(buckets, bucketKey(event.OccurredAt, grain), event, total, cost)
+		addRanking(toolRank, emptyAs(event.ToolName, "unknown"), event, total, cost)
+		addRanking(modelRank, emptyAs(event.ModelName, "unknown"), event, total, cost)
+		addRanking(projectRank, emptyAs(event.ProjectPath, "unknown"), event, total, cost)
 	}
 
 	summary.ModelCount = len(models)
@@ -57,7 +58,7 @@ func BuildDashboard(events []Event, grain Grain) Dashboard {
 	}
 }
 
-func addBucket(items map[string]*Bucket, key string, event Event, total int64) {
+func addBucket(items map[string]*Bucket, key string, event Event, total int64, cost float64) {
 	item, ok := items[key]
 	if !ok {
 		item = &Bucket{Key: key}
@@ -71,10 +72,10 @@ func addBucket(items map[string]*Bucket, key string, event Event, total int64) {
 	item.ToolTokens += event.ToolTokens
 	item.TotalTokens += total
 	item.RequestCount++
-	item.CostAmount += event.CostAmount
+	item.CostAmount += cost
 }
 
-func addRanking(items map[string]*RankingItem, name string, event Event, total int64) {
+func addRanking(items map[string]*RankingItem, name string, event Event, total int64, cost float64) {
 	item, ok := items[name]
 	if !ok {
 		item = &RankingItem{Name: name}
@@ -88,7 +89,7 @@ func addRanking(items map[string]*RankingItem, name string, event Event, total i
 	item.ToolTokens += event.ToolTokens
 	item.TotalTokens += total
 	item.RequestCount++
-	item.CostAmount += event.CostAmount
+	item.CostAmount += cost
 }
 
 func sortedBuckets(items map[string]*Bucket) []Bucket {

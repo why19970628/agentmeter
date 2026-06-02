@@ -130,14 +130,7 @@
               <th>{{ t . "period" }}</th>
               <th>{{ t . "tool" }}</th>
               <th>{{ t . "model" }}</th>
-              <th>{{ t . "input_tokens" }}</th>
-              <th>{{ t . "output_tokens" }}</th>
-              <th>{{ t . "cache_read" }}</th>
-              <th>{{ t . "cache_write" }}</th>
-              <th>{{ t . "reasoning_tokens" }}</th>
-              <th>{{ t . "tool_tokens" }}</th>
-              <th>{{ t . "total_tokens" }}</th>
-              <th>
+              <th class="cost-column">
                 <span class="estimate-head">
                   {{ t . "est_usd" }}
                   <span class="estimate-tip" tabindex="0" aria-label="{{ t . "pricing_title" }}">?
@@ -150,6 +143,12 @@
                   </span>
                 </span>
               </th>
+              <th>{{ t . "input_tokens" }}</th>
+              <th>{{ t . "output_tokens" }}</th>
+              <th>{{ t . "cache_read" }}</th>
+              <th>{{ t . "cache_write" }}</th>
+              <th>{{ t . "reasoning_tokens" }}</th>
+              <th>{{ t . "total_tokens" }}</th>
             </tr>
           </thead>
           <tbody>
@@ -163,25 +162,23 @@
               data-cache-read-tokens="{{ .CacheReadTokens }}"
               data-cache-write-tokens="{{ .CacheWriteTokens }}"
               data-reasoning-tokens="{{ .ReasoningTokens }}"
-              data-tool-tokens="{{ .ToolTokens }}"
               data-total-tokens="{{ .TotalTokens }}"
               data-est-usd="{{ printf "%.6f" .EstUSD }}"
             >
               <td>{{ .Period }}</td>
               <td>{{ .Tool }}</td>
               <td>{{ .Name }}</td>
+              <td class="cost-column">${{ printf "%.3f" .EstUSD }}</td>
               <td data-token-value="{{ .InputTokens }}">{{ format .InputTokens }}</td>
               <td data-token-value="{{ .OutputTokens }}">{{ format .OutputTokens }}</td>
               <td data-token-value="{{ .CacheReadTokens }}">{{ format .CacheReadTokens }}</td>
               <td data-token-value="{{ .CacheWriteTokens }}">{{ format .CacheWriteTokens }}</td>
               <td data-token-value="{{ .ReasoningTokens }}">{{ format .ReasoningTokens }}</td>
-              <td data-token-value="{{ .ToolTokens }}">{{ format .ToolTokens }}</td>
               <td data-token-value="{{ .TotalTokens }}">{{ format .TotalTokens }}</td>
-              <td>${{ printf "%.3f" .EstUSD }}</td>
             </tr>
             {{ else }}
             <tr>
-              <td colspan="11" class="empty-cell">{{ t . "empty_models" }}</td>
+              <td colspan="10" class="empty-cell">{{ t . "empty_models" }}</td>
             </tr>
             {{ end }}
           </tbody>

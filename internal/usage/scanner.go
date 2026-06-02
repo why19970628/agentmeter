@@ -388,6 +388,9 @@ func cumulativeKey(event Event) string {
 	}
 	session := strings.TrimSpace(event.SessionID)
 	if session == "" {
+		session = strings.TrimSpace(event.SourceFile)
+	}
+	if session == "" {
 		session = "daily"
 	}
 	day := event.OccurredAt.In(time.Local).Format("2006-01-02")

@@ -1,0 +1,136 @@
+@import "../../static/css/app.css";
+
+.vue-chart {
+  height: 380px;
+}
+
+.vue-chart.compact {
+  height: 280px;
+}
+
+.theme-switch {
+  border: 1px solid var(--line);
+}
+
+button {
+  font: inherit;
+}
+
+.cost-cell {
+  cursor: help;
+  text-decoration: underline dotted color-mix(in srgb, var(--muted) 70%, transparent);
+  text-underline-offset: 4px;
+}
+
+.cost-cell:hover {
+  color: var(--green);
+}
+
+.cost-tooltip {
+  position: fixed;
+  z-index: 80;
+  width: min(390px, calc(100vw - 28px));
+  pointer-events: none;
+  padding: 12px;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(107, 231, 202, .10), rgba(120, 168, 255, .07)),
+    var(--panel-strong);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .28);
+  backdrop-filter: blur(16px);
+}
+
+.cost-tooltip-head,
+.cost-tooltip-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 16px;
+  align-items: baseline;
+}
+
+.cost-tooltip-head {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cost-tooltip-head span,
+.cost-tooltip-grid span,
+.cost-tooltip p {
+  color: var(--muted);
+}
+
+.cost-tooltip-head strong {
+  color: var(--green);
+  font-size: 18px;
+}
+
+.cost-tooltip-grid {
+  font-size: 12px;
+}
+
+.cost-tooltip-grid strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-tooltip-items {
+  display: grid;
+  gap: 2px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.cost-tooltip-item {
+  display: grid;
+  grid-template-columns: minmax(100px, 1.2fr) minmax(70px, .9fr) minmax(70px, .8fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cost-tooltip-item span:nth-child(2),
+.cost-tooltip-item strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-tooltip-item strong {
+  color: var(--ink);
+}
+
+.cost-tooltip-item.active {
+  color: var(--ink);
+  background: rgba(107, 231, 202, .10);
+}
+
+.cost-tooltip-item.active strong {
+  color: var(--green);
+}
+
+.cost-tooltip-item-head {
+  min-height: 20px;
+  padding-top: 0;
+  padding-bottom: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.cost-tooltip p {
+  margin: 10px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+@media (max-width: 880px) {
+  .vue-chart {
+    height: 320px;
+  }
+}

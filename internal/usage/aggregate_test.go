@@ -62,3 +62,30 @@ func TestBuildDashboardAggregatesByDayAndRanksTools(t *testing.T) {
 		t.Fatalf("second project = %+v, want /work/a total 200", got.ProjectRanking[1])
 	}
 }
+
+func TestBuildDashboardUsesEstimatedCostWhenEventCostIsMissing(t *testing.T) {
+	restore := setTimeLocal(time.UTC)
+	defer restore()
+
+	got := BuildDashboard([]Event{
+		{
+			ToolName:        "codex",
+			ModelName:       "gpt-5.5",
+			InputTokens:     128_415_423,
+			OutputTokens:    302_708,
+			CacheReadTokens: 124_555_776,
+			TotalTokens:     128_718_131,
+			OccurredAt:      time.Date(2026, 5, 27, 14, 4, 30, 0, time.UTC),
+		},
+	}, GrainDay)
+
+	if got.Summary.CostAmount < 65 || got.Summary.CostAmount > 66 {
+		t.Fatalf("summary cost = %.3f, want codex billable estimate near 65", got.Summary.CostAmount)
+	}
+	if len(got.Trend) != 1 || got.Trend[0].CostAmount < 65 || got.Trend[0].CostAmount > 66 {
+		t.Fatalf("trend cost = %+v, want codex billable estimate near 65", got.Trend)
+	}
+	if got.ModelRanking[0].CostAmount < 65 || got.ModelRanking[0].CostAmount > 66 {
+		t.Fatalf("model ranking cost = %.3f, want codex billable estimate near 65", got.ModelRanking[0].CostAmount)
+	}
+}

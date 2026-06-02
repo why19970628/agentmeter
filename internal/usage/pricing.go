@@ -11,6 +11,17 @@ type ModelPrice struct {
 	OutputPerMTokens      float64
 }
 
+type CostBreakdown struct {
+	Input      float64 `json:"input"`
+	Output     float64 `json:"output"`
+	CacheRead  float64 `json:"cache_read"`
+	CacheWrite float64 `json:"cache_write"`
+	Reasoning  float64 `json:"reasoning"`
+	Tool       float64 `json:"tool"`
+	Total      float64 `json:"total"`
+	Note       string  `json:"note"`
+}
+
 type modelPriceEntry struct {
 	Match string
 	Price ModelPrice
@@ -28,25 +39,55 @@ var builtInPrices = []modelPriceEntry{
 }
 
 func EstimateCost(event Event) float64 {
+	return EstimateCostBreakdown(event).Total
+}
+
+func EstimateCostBreakdown(event Event) CostBreakdown {
 	if event.CostAmount > 0 {
-		return event.CostAmount
+		return CostBreakdown{
+			Total: event.CostAmount,
+			Note:  "Cost came from the source log, so column-level split is unavailable.",
+		}
 	}
 	price, ok := priceForModel(event.ModelName)
 	if !ok {
-		return 0
+		return CostBreakdown{Note: "No built-in price rule for this model."}
 	}
 	if isCodexTool(event.ToolName) {
-		base := perMillion(event.InputTokens, price.InputPerMTokens) +
-			perMillion(event.OutputTokens+event.ReasoningTokens+event.ToolTokens, price.OutputPerMTokens)
-		return base * codexBillableEstimateMultiplier
+		inputSideTokens := maxInt64(event.InputTokens, event.CacheReadTokens)
+		inputCost := perMillion(inputSideTokens, price.InputPerMTokens) * codexBillableEstimateMultiplier
+		outputTokens := event.OutputTokens + event.ReasoningTokens + event.ToolTokens
+		breakdownInput := inputCost
+		breakdownCacheRead := 0.0
+		if event.CacheReadTokens > event.InputTokens {
+			breakdownInput = perMillion(event.InputTokens, price.InputPerMTokens) * codexBillableEstimateMultiplier
+			breakdownCacheRead = perMillion(event.CacheReadTokens, price.InputPerMTokens) * codexBillableEstimateMultiplier
+		}
+		breakdown := CostBreakdown{
+			Input:     breakdownInput,
+			CacheRead: breakdownCacheRead,
+			Output:    perMillion(event.OutputTokens, price.OutputPerMTokens) * codexBillableEstimateMultiplier,
+			Reasoning: perMillion(event.ReasoningTokens, price.OutputPerMTokens) * codexBillableEstimateMultiplier,
+			Tool:      perMillion(event.ToolTokens, price.OutputPerMTokens) * codexBillableEstimateMultiplier,
+			Note:      "Codex estimate uses the larger of input tokens and cache read as input-side usage, then applies the local billable multiplier.",
+		}
+		breakdown.Total = inputCost + breakdown.Output + breakdown.Reasoning + breakdown.Tool
+		if outputTokens == 0 {
+			breakdown.Output = 0
+		}
+		return breakdown
 	}
 	billedInput := maxInt64(0, event.InputTokens-event.CacheReadTokens)
-	billedOutput := event.OutputTokens + event.ReasoningTokens + event.ToolTokens
-	base := perMillion(billedInput, price.InputPerMTokens) +
-		perMillion(event.CacheReadTokens, price.CachedInputPerMTokens) +
-		perMillion(event.CacheWriteTokens, price.CacheWritePerMTokens) +
-		perMillion(billedOutput, price.OutputPerMTokens)
-	return base
+	breakdown := CostBreakdown{
+		Input:      perMillion(billedInput, price.InputPerMTokens),
+		CacheRead:  perMillion(event.CacheReadTokens, price.CachedInputPerMTokens),
+		CacheWrite: perMillion(event.CacheWriteTokens, price.CacheWritePerMTokens),
+		Output:     perMillion(event.OutputTokens, price.OutputPerMTokens),
+		Reasoning:  perMillion(event.ReasoningTokens, price.OutputPerMTokens),
+		Tool:       perMillion(event.ToolTokens, price.OutputPerMTokens),
+	}
+	breakdown.Total = breakdown.Input + breakdown.CacheRead + breakdown.CacheWrite + breakdown.Output + breakdown.Reasoning + breakdown.Tool
+	return breakdown
 }
 
 func isCodexTool(tool string) bool {

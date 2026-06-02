@@ -177,6 +177,27 @@ func TestNormalizeCumulativeEventsKeepsCodexSessionDailyMaxSnapshot(t *testing.T
 	}
 }
 
+func TestNormalizeCumulativeEventsKeepsCodexDailyMaxPerSourceFileWhenSessionMissing(t *testing.T) {
+	restore := setTimeLocal(time.UTC)
+	defer restore()
+
+	events := []Event{
+		{ToolName: "codex", ModelName: "gpt-5.5", InputTokens: 10, TotalTokens: 10, OccurredAt: time.Date(2026, 5, 28, 10, 0, 0, 0, time.UTC), SourceFile: "/codex/a.jsonl"},
+		{ToolName: "codex", ModelName: "gpt-5.5", InputTokens: 20, TotalTokens: 20, OccurredAt: time.Date(2026, 5, 28, 10, 1, 0, 0, time.UTC), SourceFile: "/codex/a.jsonl"},
+		{ToolName: "codex", ModelName: "gpt-5.5", InputTokens: 30, TotalTokens: 30, OccurredAt: time.Date(2026, 5, 28, 11, 0, 0, 0, time.UTC), SourceFile: "/codex/b.jsonl"},
+		{ToolName: "codex", ModelName: "gpt-5.5", InputTokens: 40, TotalTokens: 40, OccurredAt: time.Date(2026, 5, 28, 11, 1, 0, 0, time.UTC), SourceFile: "/codex/b.jsonl"},
+	}
+
+	got := NormalizeCumulativeEvents(events)
+
+	if len(got) != 2 {
+		t.Fatalf("events len = %d, want max snapshot per source file", len(got))
+	}
+	if got[0].InputTokens+got[1].InputTokens != 60 {
+		t.Fatalf("normalized input sum = %d, want 60", got[0].InputTokens+got[1].InputTokens)
+	}
+}
+
 func TestScanDirCarriesModelContextWithinJSONDocument(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "context.json")

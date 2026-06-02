@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -52,6 +53,9 @@ func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
 	if !strings.Contains(indexResp.Body.String(), "Daily API Requests") {
 		t.Fatalf("index body does not contain daily request chart title")
 	}
+	if strings.Contains(indexResp.Body.String(), `<h2>Usage Trend</h2>`) || strings.Contains(indexResp.Body.String(), `id="usageTrendChart"`) {
+		t.Fatalf("index body should not contain the removed usage trend chart")
+	}
 	if !strings.Contains(indexResp.Body.String(), "request_count") {
 		t.Fatalf("index body does not expose daily request count")
 	}
@@ -68,10 +72,13 @@ func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
 	if !strings.Contains(indexResp.Body.String(), `class="estimate-tip"`) || strings.Contains(indexResp.Body.String(), `class="pricing-note"`) || strings.Contains(indexResp.Body.String(), `class="pricing-popover"`) {
 		t.Fatalf("pricing formula should render as a compact table header tooltip")
 	}
-	for _, want := range []string{"Cache Read", "Cache Write", "Reasoning Tokens", "Tool Tokens"} {
+	for _, want := range []string{"Cache Read", "Cache Write", "Reasoning Tokens"} {
 		if !strings.Contains(indexResp.Body.String(), want) {
 			t.Fatalf("index body does not contain extended token fragment %q", want)
 		}
+	}
+	if strings.Contains(indexResp.Body.String(), "<th>Tool Tokens</th>") {
+		t.Fatalf("model details table should not render the always-zero Tool Tokens column")
 	}
 
 	apiReq := httptest.NewRequest(http.MethodGet, "/api/dashboard?grain=day", nil)
@@ -82,6 +89,52 @@ func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
 	}
 	if !strings.Contains(apiResp.Body.String(), `"total_tokens":120`) {
 		t.Fatalf("api body = %s, want total_tokens 120", apiResp.Body.String())
+	}
+	if !strings.Contains(apiResp.Body.String(), `"model_rows"`) || !strings.Contains(apiResp.Body.String(), `"cost_breakdown"`) {
+		t.Fatalf("api body should expose model rows with cost breakdown: %s", apiResp.Body.String())
+	}
+}
+
+func TestDashboardAPIExposesModelRowsWithColumnCostBreakdown(t *testing.T) {
+	server, err := NewEmbeddedServer([]usage.Event{
+		{
+			ToolName:        "codex",
+			ModelName:       "gpt-5.5",
+			InputTokens:     128_415_423,
+			OutputTokens:    302_708,
+			CacheReadTokens: 124_555_776,
+			TotalTokens:     128_718_131,
+			OccurredAt:      time.Date(2026, 5, 27, 14, 4, 30, 0, time.UTC),
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := httptest.NewRecorder()
+	server.Routes().ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/api/dashboard?grain=day", nil))
+	if resp.Code != http.StatusOK {
+		t.Fatalf("api status = %d, want 200", resp.Code)
+	}
+
+	var body struct {
+		ModelRows []UsageRowAPI `json:"model_rows"`
+	}
+	if err := json.Unmarshal(resp.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.ModelRows) < 1 {
+		t.Fatalf("model rows missing: %s", resp.Body.String())
+	}
+	row := body.ModelRows[0]
+	if row.Period != "2026-05-27" || row.Tool != "Codex" || row.Model != "gpt-5.5" {
+		t.Fatalf("first model row = %+v, want codex gpt-5.5 row on 2026-05-27", row)
+	}
+	if row.CostBreakdown.Input <= 64 || row.CostBreakdown.Input >= 65 || row.CostBreakdown.Output <= 0 {
+		t.Fatalf("cost breakdown = %+v, want input and output column estimates", row.CostBreakdown)
+	}
+	if row.CostBreakdown.Total < 65 || row.CostBreakdown.Total > 66 {
+		t.Fatalf("cost total = %.3f, want codex row estimate near 65", row.CostBreakdown.Total)
 	}
 }
 
@@ -104,8 +157,8 @@ func TestEmbeddedServerRendersIndexAndStaticAssets(t *testing.T) {
 	if indexResp.Code != http.StatusOK {
 		t.Fatalf("index status = %d, want 200", indexResp.Code)
 	}
-	if !strings.Contains(indexResp.Body.String(), "AgentMeter") {
-		t.Fatalf("index body does not contain AgentMeter")
+	if !strings.Contains(indexResp.Body.String(), `<div id="app"></div>`) || !strings.Contains(indexResp.Body.String(), `type="module"`) {
+		t.Fatalf("embedded index should render the Vue app shell:\n%s", indexResp.Body.String())
 	}
 
 	staticResp := httptest.NewRecorder()

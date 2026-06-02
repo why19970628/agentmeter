@@ -17,13 +17,15 @@ import (
 	"github.com/why19970628/agentmeter/internal/usage"
 )
 
-//go:embed assets/templates/*.html assets/static/css/*.css assets/static/js/*.js
+//go:embed assets/templates/*.html assets/static/css/*.css assets/static/js/*.js assets/app/index.html assets/app/assets/*
 var embeddedAssets embed.FS
 
 type Server struct {
 	events    []usage.Event
 	templates *template.Template
 	staticFS  http.FileSystem
+	appFS     http.FileSystem
+	useApp    bool
 }
 
 type PageData struct {
@@ -48,6 +50,27 @@ type UsageRow struct {
 	ToolTokens       int64
 	TotalTokens      int64
 	EstUSD           float64
+	CostBreakdown    usage.CostBreakdown
+}
+
+type UsageRowAPI struct {
+	Period           string              `json:"period"`
+	Tool             string              `json:"tool"`
+	Model            string              `json:"model"`
+	InputTokens      int64               `json:"input_tokens"`
+	OutputTokens     int64               `json:"output_tokens"`
+	CacheReadTokens  int64               `json:"cache_read_tokens"`
+	CacheWriteTokens int64               `json:"cache_write_tokens"`
+	ReasoningTokens  int64               `json:"reasoning_tokens"`
+	ToolTokens       int64               `json:"tool_tokens"`
+	TotalTokens      int64               `json:"total_tokens"`
+	EstUSD           float64             `json:"est_usd"`
+	CostBreakdown    usage.CostBreakdown `json:"cost_breakdown"`
+}
+
+type DashboardResponse struct {
+	usage.Dashboard
+	ModelRows []UsageRowAPI `json:"model_rows"`
 }
 
 func NewServer(events []usage.Event, templateDir string, staticDir string) (*Server, error) {
@@ -91,7 +114,9 @@ func NewEmbeddedServer(events []usage.Event) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Server{events: events, templates: tmpl, staticFS: http.FS(staticFS)}, nil
+	appFS, err := fs.Sub(embeddedAssets, "assets/app")
+	useApp := err == nil
+	return &Server{events: events, templates: tmpl, staticFS: http.FS(staticFS), appFS: http.FS(appFS), useApp: useApp}, nil
 }
 
 func templateJSON(value any) template.JS {
@@ -144,10 +169,22 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/api/dashboard", s.dashboard)
 	mux.HandleFunc("/export.csv", s.exportCSV)
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(s.staticFS)))
+	if s.useApp {
+		mux.Handle("/assets/", http.FileServer(s.appFS))
+	}
 	return mux
 }
 
 func (s *Server) index(w http.ResponseWriter, r *http.Request) {
+	if s.useApp {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		http.FileServer(s.appFS).ServeHTTP(w, r)
+		return
+	}
 	grain := parseGrain(r)
 	lang := parseLang(r.URL.Query().Get("lang"))
 	data := PageData{
@@ -187,7 +224,9 @@ func modelRows(events []usage.Event, unresolved string) []UsageRow {
 		row.ReasoningTokens += event.ReasoningTokens
 		row.ToolTokens += event.ToolTokens
 		row.TotalTokens += normalizedTotal(event)
-		row.EstUSD += usage.EstimateCost(event)
+		breakdown := usage.EstimateCostBreakdown(event)
+		row.EstUSD += breakdown.Total
+		row.CostBreakdown = addCostBreakdown(row.CostBreakdown, breakdown)
 	}
 
 	rows := make([]UsageRow, 0, len(byModel)+1)
@@ -202,12 +241,56 @@ func modelRows(events []usage.Event, unresolved string) []UsageRow {
 		total.ToolTokens += row.ToolTokens
 		total.TotalTokens += row.TotalTokens
 		total.EstUSD += row.EstUSD
+		total.CostBreakdown = addCostBreakdown(total.CostBreakdown, row.CostBreakdown)
 	}
 	sortUsageRows(rows)
 	if len(rows) > 0 {
 		rows = append(rows, total)
 	}
 	return rows
+}
+
+func apiUsageRows(rows []UsageRow) []UsageRowAPI {
+	out := make([]UsageRowAPI, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, UsageRowAPI{
+			Period:           row.Period,
+			Tool:             row.Tool,
+			Model:            row.Name,
+			InputTokens:      row.InputTokens,
+			OutputTokens:     row.OutputTokens,
+			CacheReadTokens:  row.CacheReadTokens,
+			CacheWriteTokens: row.CacheWriteTokens,
+			ReasoningTokens:  row.ReasoningTokens,
+			ToolTokens:       row.ToolTokens,
+			TotalTokens:      row.TotalTokens,
+			EstUSD:           row.EstUSD,
+			CostBreakdown:    row.CostBreakdown,
+		})
+	}
+	return out
+}
+
+func addCostBreakdown(a, b usage.CostBreakdown) usage.CostBreakdown {
+	return usage.CostBreakdown{
+		Input:      a.Input + b.Input,
+		Output:     a.Output + b.Output,
+		CacheRead:  a.CacheRead + b.CacheRead,
+		CacheWrite: a.CacheWrite + b.CacheWrite,
+		Reasoning:  a.Reasoning + b.Reasoning,
+		Tool:       a.Tool + b.Tool,
+		Total:      a.Total + b.Total,
+		Note:       firstNonEmpty(a.Note, b.Note),
+	}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func normalizedTotal(event usage.Event) int64 {
@@ -250,7 +333,11 @@ func displayTool(tool string) string {
 func (s *Server) dashboard(w http.ResponseWriter, r *http.Request) {
 	grain := parseGrain(r)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if err := json.NewEncoder(w).Encode(usage.BuildDashboard(s.events, grain)); err != nil {
+	response := DashboardResponse{
+		Dashboard: usage.BuildDashboard(s.events, grain),
+		ModelRows: apiUsageRows(modelRows(s.events, "Unresolved")),
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
