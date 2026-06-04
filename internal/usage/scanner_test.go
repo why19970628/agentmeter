@@ -177,6 +177,74 @@ func TestNormalizeCumulativeEventsKeepsCodexSessionDailyMaxSnapshot(t *testing.T
 	}
 }
 
+func TestNormalizeCumulativeEventsKeepsCodexDailyMaxPerSourceFileWhenSessionMissing(t *testing.T) {
+	restore := setTimeLocal(time.UTC)
+	defer restore()
+
+	events := []Event{
+		{ToolName: "codex", ModelName: "gpt-5.5", SourceFile: "a.jsonl", InputTokens: 100, OutputTokens: 10, TotalTokens: 110, OccurredAt: time.Date(2026, 6, 4, 10, 0, 0, 0, time.UTC)},
+		{ToolName: "codex", ModelName: "gpt-5.5", SourceFile: "a.jsonl", InputTokens: 150, OutputTokens: 20, TotalTokens: 170, OccurredAt: time.Date(2026, 6, 4, 11, 0, 0, 0, time.UTC)},
+		{ToolName: "codex", ModelName: "gpt-5.5", SourceFile: "b.jsonl", InputTokens: 200, OutputTokens: 30, TotalTokens: 230, OccurredAt: time.Date(2026, 6, 4, 12, 0, 0, 0, time.UTC)},
+	}
+
+	got := NormalizeCumulativeEvents(events)
+
+	if len(got) != 2 {
+		t.Fatalf("events len = %d, want 2", len(got))
+	}
+	var total int64
+	for _, event := range got {
+		total += event.TotalTokens
+	}
+	if total != 400 {
+		t.Fatalf("total tokens = %d, want 400", total)
+	}
+}
+
+func TestScanDirReadsOfficialBilledCost(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "cost.jsonl")
+	body := `{"tool":"codex","model":"gpt-5.5","usage":{"input_tokens":1000,"output_tokens":100},"billed_cost":"43.7503","timestamp":"2026-06-04T10:00:00Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	events, err := ScanDir(dir, ScanOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(events) != 1 {
+		t.Fatalf("events len = %d, want 1", len(events))
+	}
+	if events[0].CostAmount != 43.7503 {
+		t.Fatalf("cost amount = %.4f, want 43.7503", events[0].CostAmount)
+	}
+}
+
+func TestScanDirPrefersCodexTotalTokenUsageOverLastTokenUsage(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "codex-token-usage.jsonl")
+	body := `{"tool":"codex","model":"gpt-5.5","payload":{"info":{"last_token_usage":{"input_tokens":10,"output_tokens":2,"cached_input_tokens":8,"total_tokens":12},"total_token_usage":{"input_tokens":1000,"output_tokens":20,"cached_input_tokens":700,"reasoning_output_tokens":5,"total_tokens":1025}}},"timestamp":"2026-06-04T10:00:00Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	events, err := ScanDir(dir, ScanOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(events) != 1 {
+		t.Fatalf("events len = %d, want 1", len(events))
+	}
+	event := events[0]
+	if event.InputTokens != 1000 || event.OutputTokens != 20 || event.CacheReadTokens != 700 || event.ReasoningTokens != 5 || event.TotalTokens != 1025 {
+		t.Fatalf("event tokens = input:%d output:%d cache:%d reasoning:%d total:%d, want total_token_usage values",
+			event.InputTokens, event.OutputTokens, event.CacheReadTokens, event.ReasoningTokens, event.TotalTokens)
+	}
+}
+
 func TestScanDirCarriesModelContextWithinJSONDocument(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "context.json")

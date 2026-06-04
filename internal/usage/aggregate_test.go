@@ -62,3 +62,26 @@ func TestBuildDashboardAggregatesByDayAndRanksTools(t *testing.T) {
 		t.Fatalf("second project = %+v, want /work/a total 200", got.ProjectRanking[1])
 	}
 }
+
+func TestBuildDashboardReportsNonCachedInputTokens(t *testing.T) {
+	events := []Event{
+		{
+			ToolName:        "codex",
+			ModelName:       "gpt-5.5",
+			InputTokens:     1_500,
+			OutputTokens:    100,
+			CacheReadTokens: 1_000,
+			TotalTokens:     1_600,
+			OccurredAt:      time.Date(2026, 6, 4, 10, 0, 0, 0, time.UTC),
+		},
+	}
+
+	got := BuildDashboard(events, GrainDay)
+
+	if got.Summary.InputTokens != 500 {
+		t.Fatalf("summary input tokens = %d, want non-cached input 500", got.Summary.InputTokens)
+	}
+	if got.Summary.CacheReadTokens != 1000 {
+		t.Fatalf("summary cache read tokens = %d, want 1000", got.Summary.CacheReadTokens)
+	}
+}

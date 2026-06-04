@@ -180,7 +180,7 @@ func modelRows(events []usage.Event, unresolved string) []UsageRow {
 			row = &UsageRow{Period: period, Tool: tool, Name: model}
 			byModel[key] = row
 		}
-		row.InputTokens += event.InputTokens
+		row.InputTokens += usage.BillableInputTokens(event)
 		row.OutputTokens += event.OutputTokens
 		row.CacheReadTokens += event.CacheReadTokens
 		row.CacheWriteTokens += event.CacheWriteTokens

@@ -81,7 +81,7 @@ func BuildRows(events []usage.Event, group string) []Row {
 			row = &Row{Source: name}
 			byGroup[name] = row
 		}
-		row.InputTokens += event.InputTokens
+		row.InputTokens += usage.BillableInputTokens(event)
 		row.OutputTokens += event.OutputTokens
 		row.CacheReadTokens += event.CacheReadTokens
 		row.CacheWriteTokens += event.CacheWriteTokens

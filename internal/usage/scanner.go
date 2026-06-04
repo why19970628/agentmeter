@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -183,6 +184,28 @@ func recordToEvent(record map[string]any, path string, opts ScanOptions) (Event,
 	reasoning := intAt(record, "reasoning_tokens", "thoughts_token_count")
 	toolTokens := intAt(record, "tool_tokens", "tool_token_count")
 	total := intAt(record, "total_tokens")
+
+	if usage != nil {
+		input = firstNonZero(input, intAt(usage, "input_tokens", "prompt_tokens"))
+		output = firstNonZero(output, intAt(usage, "output_tokens", "completion_tokens"))
+		cacheRead = firstNonZero(cacheRead, intAt(usage, "cache_read_tokens", "cache_read_input_tokens", "cached_input_tokens", "cached_content_token_count"))
+		cacheWrite = firstNonZero(cacheWrite, intAt(usage, "cache_write_tokens", "cache_creation_tokens", "cache_creation_input_tokens"))
+		reasoning = firstNonZero(reasoning, intAt(usage, "reasoning_tokens", "thoughts_token_count"))
+		toolTokens = firstNonZero(toolTokens, intAt(usage, "tool_tokens", "tool_token_count"))
+		total = firstNonZero(total, intAt(usage, "total_tokens"))
+	}
+	if totalUsage := nestedObjectAt(record, "total_token_usage"); totalUsage != nil {
+		input = firstNonZero(input, intAt(totalUsage, "input_tokens", "prompt_tokens"))
+		output = firstNonZero(output, intAt(totalUsage, "output_tokens", "completion_tokens"))
+		cacheRead = firstNonZero(cacheRead, intAt(totalUsage, "cache_read_tokens", "cache_read_input_tokens", "cached_input_tokens", "cached_content_token_count"))
+		cacheWrite = firstNonZero(cacheWrite, intAt(totalUsage, "cache_write_tokens", "cache_creation_tokens", "cache_creation_input_tokens"))
+		reasoning = firstNonZero(reasoning, intAt(totalUsage, "reasoning_tokens", "reasoning_output_tokens", "thoughts_token_count"))
+		toolTokens = firstNonZero(toolTokens, intAt(totalUsage, "tool_tokens", "tool_token_count"))
+		total = firstNonZero(total, intAt(totalUsage, "total_tokens"))
+	}
+	cacheRead = firstNonZero(cacheRead, tokenDetail(record, "input_tokens_details", "cached_tokens"))
+	cacheWrite = firstNonZero(cacheWrite, cacheCreationTokens(record))
+	reasoning = firstNonZero(reasoning, tokenDetail(record, "output_tokens_details", "reasoning_tokens"))
 	if input == 0 {
 		input = nestedIntAt(record, "input_tokens", "prompt_tokens")
 	}
@@ -196,7 +219,7 @@ func recordToEvent(record map[string]any, path string, opts ScanOptions) (Event,
 		cacheWrite = nestedIntAt(record, "cache_write_tokens", "cache_creation_tokens", "cache_creation_input_tokens")
 	}
 	if reasoning == 0 {
-		reasoning = nestedIntAt(record, "reasoning_tokens", "thoughts_token_count")
+		reasoning = nestedIntAt(record, "reasoning_tokens", "reasoning_output_tokens", "thoughts_token_count")
 	}
 	if toolTokens == 0 {
 		toolTokens = nestedIntAt(record, "tool_tokens", "tool_token_count")
@@ -204,19 +227,6 @@ func recordToEvent(record map[string]any, path string, opts ScanOptions) (Event,
 	if total == 0 {
 		total = nestedIntAt(record, "total_tokens")
 	}
-
-	if usage != nil {
-		input = firstNonZero(input, intAt(usage, "input_tokens", "prompt_tokens"))
-		output = firstNonZero(output, intAt(usage, "output_tokens", "completion_tokens"))
-		cacheRead = firstNonZero(cacheRead, intAt(usage, "cache_read_tokens", "cache_read_input_tokens", "cached_input_tokens", "cached_content_token_count"))
-		cacheWrite = firstNonZero(cacheWrite, intAt(usage, "cache_write_tokens", "cache_creation_tokens", "cache_creation_input_tokens"))
-		reasoning = firstNonZero(reasoning, intAt(usage, "reasoning_tokens", "thoughts_token_count"))
-		toolTokens = firstNonZero(toolTokens, intAt(usage, "tool_tokens", "tool_token_count"))
-		total = firstNonZero(total, intAt(usage, "total_tokens"))
-	}
-	cacheRead = firstNonZero(cacheRead, tokenDetail(record, "input_tokens_details", "cached_tokens"))
-	cacheWrite = firstNonZero(cacheWrite, cacheCreationTokens(record))
-	reasoning = firstNonZero(reasoning, tokenDetail(record, "output_tokens_details", "reasoning_tokens"))
 	if total == 0 {
 		total = input + output + cacheWrite + reasoning + toolTokens
 	}
@@ -237,6 +247,11 @@ func recordToEvent(record map[string]any, path string, opts ScanOptions) (Event,
 		tool = inferToolFromPath(path)
 	}
 
+	cost := floatAt(record, "billed_cost", "billedCost", "cost", "cost_amount", "costAmount", "original_cost", "originalCost")
+	if cost == 0 {
+		cost = nestedFloatAt(record, "billed_cost", "billedCost", "cost", "cost_amount", "costAmount", "original_cost", "originalCost")
+	}
+
 	return Event{
 		ToolName:         tool,
 		ModelName:        modelNameFrom(record),
@@ -249,7 +264,7 @@ func recordToEvent(record map[string]any, path string, opts ScanOptions) (Event,
 		ReasoningTokens:  reasoning,
 		ToolTokens:       toolTokens,
 		TotalTokens:      total,
-		CostAmount:       floatAt(record, "cost", "cost_amount"),
+		CostAmount:       cost,
 		OccurredAt:       occurredAt,
 		SourceFile:       path,
 	}, true
@@ -388,7 +403,7 @@ func cumulativeKey(event Event) string {
 	}
 	session := strings.TrimSpace(event.SessionID)
 	if session == "" {
-		session = "daily"
+		session = event.SourceFile
 	}
 	day := event.OccurredAt.In(time.Local).Format("2006-01-02")
 	return "codex" + "\x00" + session + "\x00" + event.ModelName + "\x00" + day
@@ -407,6 +422,29 @@ func objectAt(record map[string]any, key string) map[string]any {
 		return nil
 	}
 	return value
+}
+
+func nestedObjectAt(record map[string]any, key string) map[string]any {
+	return nestedObjectAtDepth(record, key, 0)
+}
+
+func nestedObjectAtDepth(record map[string]any, key string, depth int) map[string]any {
+	if depth > 4 {
+		return nil
+	}
+	if obj := objectAt(record, key); obj != nil {
+		return obj
+	}
+	for _, raw := range record {
+		child, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		if obj := nestedObjectAtDepth(child, key, depth+1); obj != nil {
+			return obj
+		}
+	}
+	return nil
 }
 
 func asObjectSlice(value any) ([]map[string]any, bool) {
@@ -504,6 +542,32 @@ func floatAt(record map[string]any, keys ...string) float64 {
 		case json.Number:
 			n, _ := value.Float64()
 			return n
+		case string:
+			n, _ := strconv.ParseFloat(strings.TrimSpace(value), 64)
+			return n
+		}
+	}
+	return 0
+}
+
+func nestedFloatAt(record map[string]any, keys ...string) float64 {
+	return nestedFloatAtDepth(record, 0, keys...)
+}
+
+func nestedFloatAtDepth(record map[string]any, depth int, keys ...string) float64 {
+	if depth > 4 {
+		return 0
+	}
+	if value := floatAt(record, keys...); value != 0 {
+		return value
+	}
+	for _, raw := range record {
+		child, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		if value := nestedFloatAtDepth(child, depth+1, keys...); value != 0 {
+			return value
 		}
 	}
 	return 0

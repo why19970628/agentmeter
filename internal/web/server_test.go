@@ -60,7 +60,7 @@ func TestServerRendersIndexAndDashboardAPI(t *testing.T) {
 			t.Fatalf("index body does not contain model usage table fragment %q", want)
 		}
 	}
-	for _, want := range []string{"Cost estimate", "Codex", "0.10", "Local estimate"} {
+	for _, want := range []string{"Cost estimate", "billed cost", "Cache Read", "Local estimates"} {
 		if !strings.Contains(indexResp.Body.String(), want) {
 			t.Fatalf("index body does not contain pricing formula fragment %q", want)
 		}
@@ -152,7 +152,7 @@ func TestIndexModelTableAlwaysShowsDailyModelRows(t *testing.T) {
 	}
 }
 
-func TestIndexModelTableUsesCodexBillableEstimate(t *testing.T) {
+func TestIndexModelTableUsesModelCachedReadRate(t *testing.T) {
 	root := filepath.Join("..", "..")
 	server, err := NewServer([]usage.Event{
 		{
@@ -173,8 +173,8 @@ func TestIndexModelTableUsesCodexBillableEstimate(t *testing.T) {
 	server.Routes().ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/", nil))
 	body := resp.Body.String()
 
-	if !strings.Contains(body, ">2026-05-27<") || !strings.Contains(body, "$65.116") {
-		t.Fatalf("codex model row should use billable estimate near $65:\n%s", body)
+	if !strings.Contains(body, ">2026-05-27<") || !strings.Contains(body, "$90.657") || !strings.Contains(body, "3,859,647") {
+		t.Fatalf("codex model row should use model cache read estimate and show non-cached input tokens:\n%s", body)
 	}
 }
 
